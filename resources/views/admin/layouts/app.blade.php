@@ -178,12 +178,36 @@
 
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-
-                        <li class="nav-item menu-open">
-                            <a href="#" class="nav-link active">
+                        <li class="nav-item">
+                            <router-link to="/admin/dashboard" active-class="active" class="nav-link">
+                                <i class="nav-icon fas fa-th"></i>
+                                <p>
+                                    Dashboard
+                                    <span class="right badge badge-danger">New</span>
+                                </p>
+                            </router-link>
+                        </li>
+                        <li  class="nav-item">
+                            <router-link to="/admin/product" active-class="active" class="nav-link">
+                                <i class="nav-icon fas fa-holly-berry"></i>
+                                <p>
+                                    Product
+                                </p>
+                            </router-link>
+                        </li>
+                        <li  class="nav-item">
+                            <router-link to="/admin/category" active-class="active" class="nav-link">
+                                <i class="nav-icon fas fa-ellipsis-v"></i>
+                                <p>
+                                    Category
+                                </p>
+                            </router-link>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
                                 <p>
-                                    Starter Pages
+                                    Khác
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
@@ -202,15 +226,7 @@
                                 </li>
                             </ul>
                         </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-th"></i>
-                                <p>
-                                    Simple Link
-                                    <span class="right badge badge-danger">New</span>
-                                </p>
-                            </a>
-                        </li>
+                        
                     </ul>
                 </nav>
 
