@@ -1,6 +1,6 @@
 
 <template>
-  
+    <h1>{{ name }}</h1>
    <DataTable :value="products" tableStyle="min-width: 50rem">
         <template #header>
             <div class="flex flex-wrap align-items-center justify-content-between gap-2">
@@ -48,7 +48,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 
-const name = 'Nguyen Van A';
+const name = ref('Nguyen Van A');
 const products = [
     {
         code: "1",
@@ -59,4 +59,7 @@ const products = [
         name: "B"
     }
 ];
+setTimeout(function(){
+    name.value = 'abc';
+},5000);
 </script>
