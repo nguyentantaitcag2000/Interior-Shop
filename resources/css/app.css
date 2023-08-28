@@ -1,0 +1,5 @@
+@import 'admin-lte/plugins/fontawesome-free/css/all.min.css';
+@import 'admin-lte/dist/css/adminlte.css';
+
+@import 'primevue/resources/primevue.min.css';
+@import 'primevue/resources/themes/saga-blue/theme.css';
