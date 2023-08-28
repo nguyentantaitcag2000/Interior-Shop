@@ -1,12 +1,9 @@
 <?php
 
-<<<<<<< HEAD
-=======
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ColorController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\SupplierController;
->>>>>>> 4697d1a96321a96cfed8cef76639544953e0903e
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
@@ -24,9 +21,6 @@ use App\Http\Controllers\ProductController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-<<<<<<< HEAD
-Route::get('/products', [ProductController::class, 'index']);
-=======
 Route::post('/InsertProduct', [ProductController::class, 'store']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::get('/products', [ProductController::class, 'index']);
@@ -34,4 +28,3 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/materials', [MaterialController::class, 'index']);
 Route::get('/colors', [ColorController::class, 'index']);
 Route::get('/suppliers', [SupplierController::class, 'index']);
->>>>>>> 4697d1a96321a96cfed8cef76639544953e0903e

@@ -2,10 +2,6 @@
 
 namespace App\Http\Controllers;
 
-<<<<<<< HEAD
-use App\Models\Product;
-use Illuminate\Http\Request;
-=======
 use App\Models\Color;
 use App\Models\DetailProductColor;
 use App\Models\DetailProductImage;
@@ -16,7 +12,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
->>>>>>> 4697d1a96321a96cfed8cef76639544953e0903e
 
 class ProductController extends Controller
 {
@@ -25,9 +20,6 @@ class ProductController extends Controller
      */
     public function index()
     {
-<<<<<<< HEAD
-        $products = Product::latest('ID_Product')->get();
-=======
       
         $products = Product::select([
             'product.Size', 'product.ID_Product', 'product.ID_Category', 
@@ -42,7 +34,6 @@ class ProductController extends Controller
         ->orderByDesc('product.ID_Product')
         ->get();
     
->>>>>>> 4697d1a96321a96cfed8cef76639544953e0903e
         return $products;
     }
 
@@ -59,19 +50,6 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-<<<<<<< HEAD
-        return Product::create([
-            'ID_Category' => request('ID_Category'),
-            'Name_Product' => request('Name_Product'),
-            'Description' => request('Description'),
-            'Price' => request('Price'),
-            'Avatar' => request('Avatar'),
-            'Size' => request('Size'),
-            'Amount_Product' => request('Amount_Product'),
-            'ID_S' => request('ID_S'),
-        ]);
-    }
-=======
         try{
 
         
@@ -179,7 +157,6 @@ class ProductController extends Controller
             ]); 
         }
     } 
->>>>>>> 4697d1a96321a96cfed8cef76639544953e0903e
 
     /**
      * Display the specified resource.
@@ -210,9 +187,6 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-<<<<<<< HEAD
-        //
-=======
         try {
             return DB::transaction(function() use ($id) {
                 // Lấy sản phẩm dựa trên ID
@@ -266,6 +240,5 @@ class ProductController extends Controller
             ];
         }
     
->>>>>>> 4697d1a96321a96cfed8cef76639544953e0903e
     }
 }

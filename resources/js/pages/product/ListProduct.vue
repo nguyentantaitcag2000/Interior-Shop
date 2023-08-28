@@ -20,7 +20,22 @@ interface color{
 }
 interface category{
     ID_Category: number,
-    Name_Category: string
+    Name_Category: string,
+    Icon:string
+}
+interface detail_product_color{
+    ID_Product: number,
+    ID_Color: number,
+    color: color
+}
+interface detail_product_material{
+    ID_Product: number,
+    ID_Material: number,
+    material: material
+}
+interface detail_product_image{
+    ID_Product:number|null,
+    Image:string
 }
 interface FormState{
     'ID_Product': number | null,
@@ -36,16 +51,20 @@ interface FormState{
     'Size': string,
     'material': material | null,
     'color': color | null,
-    'category': category | null
+    'category': category | null,
+    'detail_product_material': detail_product_material[] | null,
+    'detail_product_color': detail_product_color[] | null,
+    'detail_product_image': detail_product_image[] | null,
 }
 
-const products = ref([]);
+const products = ref<FormState[]>();
 const categories = ref<category[]>();
 const materials = ref([]);
 const colors = ref([]);
 const suppliers = ref([]);
-const formInsertRef = ref(null);
+const formInsertRef = ref<any>(null);
 const mode = ref('insert'); // Chế độ <=> Sử dụng 'update' khi muốn cập nhật
+const loading = ref(true);
 const initialFormState:FormState = {
     'ID_Product': null,
     'ID_Category': null,
@@ -60,11 +79,14 @@ const initialFormState:FormState = {
     'Size': '',
     'material': null,
     'color': null,
-    'category' : null
+    'category' : null,
+    'detail_product_material': null,
+    'detail_product_color': null,
+    'detail_product_image': null
 };
 // const form = reactive({...initialFormState});
 const form = reactive<FormState>(JSON.parse(JSON.stringify(initialFormState)));
-let form_update = reactive({});
+let form_update = reactive<FormState>(JSON.parse(JSON.stringify(initialFormState)));
 const getUsers = () => {
     axios.get('/api/products').then((res)=>{
         products.value = res.data;
@@ -114,27 +136,32 @@ const filters = reactive({
     global: {
         value: ''
     }
-});
+} as any);
 const selectedCategoryDetail = computed(() => {
     if(categories.value !=undefined)
     return categories.value.find(category => category.ID_Category === form.ID_Category);
 })
 
-const InsertProduct = (event) => {
+const InsertProduct = (event:any) => {
     event.preventDefault();
     LazyCodet.AlertProcessing({
         requireConfirm: false,
+        alertMessage: "Đang xử lý...",
         workerFunction: () => {
             return axios.post('/api/InsertProduct',form).then((res)=>{
                 if(res.data.status == 200)
                 {
                     LazyCodet.AlertSuccess(res.data.message);
+                    if(products.value != undefined)
+                    {
+                        products.value.unshift(res.data.object);
+                        //Reset form
+                        Object.assign(form, initialFormState); // Có thể xóa được 99%, trừ 1% trường hợp là input type="file" sẽ không xóa được do nếu set input.value = '' thì sẽ lại bị lỗi validate của form require
+                        if(formInsertRef.value)
+                            formInsertRef.value.reset(); // Do lý do trên nên bắt buộc phải reset thêm cái này, cái này thì có thể reset giá trị trong input nhưng những html được tạo ra từ v-for thì nó lại không xóa được, nên kết hợp cả 2 sẽ clear full.
+                        $('#insertModal').modal('hide');
+                    }
                     
-                    products.value.unshift(res.data.object);
-                    //Reset form
-                    Object.assign(form, initialFormState); // Có thể xóa được 99%, trừ 1% trường hợp là input type="file" sẽ không xóa được do nếu set input.value = '' thì sẽ lại bị lỗi validate của form require
-                    formInsertRef.value.reset(); // Do lý do trên nên bắt buộc phải reset thêm cái này, cái này thì có thể reset giá trị trong input nhưng những html được tạo ra từ v-for thì nó lại không xóa được, nên kết hợp cả 2 sẽ clear full.
-                    $('#insertModal').modal('hide');
                 }
                 else
                 {
@@ -145,30 +172,32 @@ const InsertProduct = (event) => {
     })
     
 }
-const formatCash = (amount) => {
+const formatCash = (amount:number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 const openInsertModal = () => {
     $('#form_modal').modal('show');
     mode.value = 'insert';
 }
-const updateProduct = (productData) => {
+const updateProduct = (productData:FormState) => {
     $('#form_modal').modal('show');
     mode.value = 'update';
-    Object.keys(productData).forEach(key => {
-        if(productData[key] !== undefined)
+    Object.keys(productData).forEach(key=> {
+        if(productData[key as keyof FormState] !== undefined)
         {
-            form_update[key] = productData[key];
+            (form_update as any)[key] = productData[key as keyof FormState];
         }
     });
-    form_update.ID_Material = productData.detail_product_material.map(item => {
-        return item.material.ID_Material;
-    });
-    form_update.ID_Color = productData.detail_product_color.map(item => {
-        return item.color.ID_Color;
-    });
+    if(productData.detail_product_material)
+        form_update.ID_Material = productData.detail_product_material.map(item => {
+            return item.material.ID_Material;
+        });
+    if(productData.detail_product_color)
+        form_update.ID_Color = productData.detail_product_color.map(item => {
+            return item.color.ID_Color;
+        });
 }
-const deleteProduct = (ID_Product) => {
+const deleteProduct = (ID_Product:number) => {
     LazyCodet.AlertProcessing({
         alertMessage: "Bạn có thực sự muốn xóa ?",
         workerFunction: () => {
@@ -176,10 +205,14 @@ const deleteProduct = (ID_Product) => {
                 if(res.status == 200)
                 {
                     LazyCodet.AlertSuccess(res.data.message);
-                    let indexToDelete = products.value.findIndex(item => item.ID_Product === ID_Product);
-                    if (indexToDelete !== -1) {
-                        products.value.splice(indexToDelete, 1);
+                    if(products.value)
+                    {
+                        let indexToDelete = products.value.findIndex(item => item.ID_Product === ID_Product);
+                        if (indexToDelete !== -1) {
+                            products.value.splice(indexToDelete, 1);
+                        }
                     }
+                    
                 }
                 else{
                     LazyCodet.AlertError(res.data.message);
@@ -193,21 +226,26 @@ const deleteProduct = (ID_Product) => {
 }
 
 
-const onUploadImageProduct = (event) => {
+const onUploadImageProduct = (event:any) => {
     var input = event.target;
     console.log(input);
-    function readFileByIndex(index)
+    function readFileByIndex(index:number)
     {
         if (!input.files || !input.files[index]) return;
             
             const FR = new FileReader();
             
             FR.addEventListener("load", function(evt) {
-            if(mode.value == 'insert')
-                form.Avatar = evt.target.result;
-            else
-                form_update.Avatar = evt.target.result;
+                if(evt.target)
+                {
+                    let result = typeof evt.target.result == 'string' ? evt.target.result : '';
+                    if(mode.value == 'insert')
+                        form.Avatar = result
+                    else
+                        form_update.Avatar = result;
                 
+                }
+                    
             });
             FR.readAsDataURL(input.files[index]);
     }
@@ -221,33 +259,35 @@ const onUploadImageProduct = (event) => {
             readFileByIndex(i);
     }
 }
-const onUploadDetailImage = (event) => {
+const onUploadDetailImage = (event: any) => {
     var input = event.target;
     for (var i = 0; i < input.files.length; i++) {
         const reader = new FileReader();
                 reader.readAsDataURL(input.files[i]);
                 reader.onload = function() {
-                        form.DetailImage.push(reader.result);
+                        form.DetailImage.push(typeof reader.result == 'string' ? reader.result : '');
                         input.value='';
                 }
         
     }
 
 }
-const onUploadDetailImage_Update = (event) => {
+const onUploadDetailImage_Update = (event:any) => {
     var input = event.target;
     for (var i = 0; i < input.files.length; i++) {
         const reader = new FileReader();
                 reader.readAsDataURL(input.files[i]);
                 reader.onload = function() {
-                        form_update.detail_product_image.push({Image:reader.result});
+                    var result = typeof reader.result == 'string' ? reader.result : '';
+                    if(form_update.detail_product_image)
+                        form_update.detail_product_image.push({Image:result,ID_Product:null});
                         input.value='';
                 }
         
     }
 
 }
-const DeleteImage = (event) => {
+const DeleteImage = (event:any) => {
     var self = event.target;
 
     const itemToBeRemoved = self.nextElementSibling.src
@@ -259,16 +299,19 @@ const DeleteImage = (event) => {
     
 
 }
-const DeleteImage_Update = (event) => {
+const DeleteImage_Update = (event:any) => {
     var self = event.target;
 
     const itemToBeRemoved = self.nextElementSibling.src
     //Dp itemToBeRemoved có kèm theo tên domain nên phải dùng includes
-    const index = form_update.detail_product_image.findIndex(item => itemToBeRemoved.includes( item.Image) );
-    if (index !== -1) {
-        form_update.detail_product_image.splice(index, 1);
-    }
+    if(form_update.detail_product_image)
+    {
+        const index = form_update.detail_product_image.findIndex(item => itemToBeRemoved.includes( item.Image) );
+        if (index !== -1) {
+            form_update.detail_product_image.splice(index, 1);
+        }
 
+    }
     
 
 }

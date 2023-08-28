@@ -9,12 +9,9 @@ class Product extends Model
 {
     use  HasFactory;
     protected $table = 'product';
-<<<<<<< HEAD
-=======
     public $timestamps = false;
     protected $primaryKey = 'ID_Product';
     
->>>>>>> 4697d1a96321a96cfed8cef76639544953e0903e
     protected $fillable = [
         'ID_Category',
         'Name_Product',
@@ -25,8 +22,6 @@ class Product extends Model
         'Amount_Product',
         'ID_S'
     ];
-<<<<<<< HEAD
-=======
 
     public function detailProductImage()
     {
@@ -49,5 +44,4 @@ class Product extends Model
         return $this->belongsTo(Supplier::class,"ID_S");
     }
     
->>>>>>> 4697d1a96321a96cfed8cef76639544953e0903e
 }
