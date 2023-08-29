@@ -1,0 +1,8 @@
+.valid{
+	color: green;
+	padding: 0 0 0 20px;
+}
+.not-valid{
+	color: red;
+	padding: 0 0 0 20px;
+}

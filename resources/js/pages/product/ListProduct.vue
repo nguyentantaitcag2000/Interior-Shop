@@ -8,35 +8,9 @@ import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
 import MultiSelect from "primevue/multiselect";
 import $ from 'jquery';
-import Swal from 'sweetalert2';
-import { LazyCodet } from '../../lazycodet/lazycodet';
-interface material{
-    ID_Material:number,
-    Name_Material: string
-}
-interface color{
-    ID_Color:number,
-    Name_Color: string,
-}
-interface category{
-    ID_Category: number,
-    Name_Category: string,
-    Icon:string
-}
-interface detail_product_color{
-    ID_Product: number,
-    ID_Color: number,
-    color: color
-}
-interface detail_product_material{
-    ID_Product: number,
-    ID_Material: number,
-    material: material
-}
-interface detail_product_image{
-    ID_Product:number|null,
-    Image:string
-}
+import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
+import {material,color,category,detailProductColor,detailProductMaterial,detailProductImage} from '../../interface';
+
 interface FormState{
     'ID_Product': number | null,
     'ID_Category': number | null,
@@ -52,9 +26,9 @@ interface FormState{
     'material': material | null,
     'color': color | null,
     'category': category | null,
-    'detail_product_material': detail_product_material[] | null,
-    'detail_product_color': detail_product_color[] | null,
-    'detail_product_image': detail_product_image[] | null,
+    'detail_product_material': detailProductMaterial[] | null,
+    'detail_product_color': detailProductColor[] | null,
+    'detail_product_image': detailProductImage[] | null,
 }
 
 const products = ref<FormState[]>();
@@ -90,7 +64,7 @@ let form_update = reactive<FormState>(JSON.parse(JSON.stringify(initialFormState
 const getUsers = () => {
     axios.get('/api/products').then((res)=>{
         products.value = res.data;
-        
+        loading.value = false;
     });
     
     axios.get('/api/categories').then((res)=>{
@@ -139,27 +113,40 @@ const filters = reactive({
 } as any);
 const selectedCategoryDetail = computed(() => {
     if(categories.value !=undefined)
-    return categories.value.find(category => category.ID_Category === form.ID_Category);
+    return categories.value.find(category => category.ID_Category === currentForm.value.ID_Category);
 })
 
-const InsertProduct = (event:any) => {
+const SubmitForm = (event:any) => {
     event.preventDefault();
     LazyCodet.AlertProcessing({
         requireConfirm: false,
         alertMessage: "Đang xử lý...",
         workerFunction: () => {
-            return axios.post('/api/InsertProduct',form).then((res)=>{
+            let isInsert = mode.value == 'insert'; 
+            let urlCall = isInsert ? '/api/InsertProduct' : '/api/UpdateProduct/' + currentForm.value.ID_Product;
+            return axios.post(urlCall,currentForm.value).then((res)=>{
                 if(res.data.status == 200)
                 {
                     LazyCodet.AlertSuccess(res.data.message);
                     if(products.value != undefined)
                     {
-                        products.value.unshift(res.data.object);
+                        if(isInsert)
+                        {
+                            products.value.unshift(res.data.object);
+                        }
+                        else{
+                            let index = products.value.findIndex(item => item.ID_Product === currentForm.value.ID_Product);
+                            if (index !== -1) {
+                                products.value[index] = res.data.object;
+                            }
+                        }
+                       
+                        
                         //Reset form
                         Object.assign(form, initialFormState); // Có thể xóa được 99%, trừ 1% trường hợp là input type="file" sẽ không xóa được do nếu set input.value = '' thì sẽ lại bị lỗi validate của form require
                         if(formInsertRef.value)
                             formInsertRef.value.reset(); // Do lý do trên nên bắt buộc phải reset thêm cái này, cái này thì có thể reset giá trị trong input nhưng những html được tạo ra từ v-for thì nó lại không xóa được, nên kết hợp cả 2 sẽ clear full.
-                        $('#insertModal').modal('hide');
+                        $('#form_modal').modal('hide');
                     }
                     
                 }
@@ -172,9 +159,7 @@ const InsertProduct = (event:any) => {
     })
     
 }
-const formatCash = (amount:number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-};
+
 const openInsertModal = () => {
     $('#form_modal').modal('show');
     mode.value = 'insert';
@@ -195,6 +180,10 @@ const updateProduct = (productData:FormState) => {
     if(productData.detail_product_color)
         form_update.ID_Color = productData.detail_product_color.map(item => {
             return item.color.ID_Color;
+        });
+    if(productData.detail_product_image)
+        form_update.DetailImage = productData.detail_product_image.map(item => {
+            return item.Image;
         });
 }
 const deleteProduct = (ID_Product:number) => {
@@ -265,22 +254,7 @@ const onUploadDetailImage = (event: any) => {
         const reader = new FileReader();
                 reader.readAsDataURL(input.files[i]);
                 reader.onload = function() {
-                        form.DetailImage.push(typeof reader.result == 'string' ? reader.result : '');
-                        input.value='';
-                }
-        
-    }
-
-}
-const onUploadDetailImage_Update = (event:any) => {
-    var input = event.target;
-    for (var i = 0; i < input.files.length; i++) {
-        const reader = new FileReader();
-                reader.readAsDataURL(input.files[i]);
-                reader.onload = function() {
-                    var result = typeof reader.result == 'string' ? reader.result : '';
-                    if(form_update.detail_product_image)
-                        form_update.detail_product_image.push({Image:result,ID_Product:null});
+                        currentForm.value.DetailImage.push(typeof reader.result == 'string' ? reader.result : '');
                         input.value='';
                 }
         
@@ -291,30 +265,15 @@ const DeleteImage = (event:any) => {
     var self = event.target;
 
     const itemToBeRemoved = self.nextElementSibling.src
-    const index = form.DetailImage.indexOf(itemToBeRemoved);
+    const index = currentForm.value.DetailImage.findIndex(item => itemToBeRemoved.includes(item));
     if (index !== -1) {
-        form.DetailImage.splice(index, 1);
+        currentForm.value.DetailImage.splice(index, 1);
     }
 
     
 
 }
-const DeleteImage_Update = (event:any) => {
-    var self = event.target;
 
-    const itemToBeRemoved = self.nextElementSibling.src
-    //Dp itemToBeRemoved có kèm theo tên domain nên phải dùng includes
-    if(form_update.detail_product_image)
-    {
-        const index = form_update.detail_product_image.findIndex(item => itemToBeRemoved.includes( item.Image) );
-        if (index !== -1) {
-            form_update.detail_product_image.splice(index, 1);
-        }
-
-    }
-    
-
-}
 onMounted(()=>{
     getUsers();
 });
@@ -380,7 +339,6 @@ img {
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" >
     <!-- <button type="button" data-bs-toggle="modal" data-bs-target="#insertModal" data-bs-whatever="@mdo" class="btn btn-success m-3">New product</button> -->
     <button @click="openInsertModal" type="button" class="btn btn-success m-3">New product</button>
-    <button type="button" data-toggle="modal" data-target="#uploadModal" data-whatever="@mdo" class="btn btn-success m-3">Upload file .csv</button>
     <DataTable v-model:filters="filters" :value="products" dataKey="ID_Product" tableStyle="min-width: 50rem" showGridlines stripedRows
                 paginator :rows="5" :rowsPerPageOptions="[5, 10, 20, 50]"
                 :globalFilterFields="['Name_Product']" filterDisplay="row" :loading="loading" 
@@ -388,7 +346,7 @@ img {
         <template #header>
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <span class="text-xl text-900 font-bold">Danh sách các sản phẩm:</span>
-                <Button icon="fas fa-sync" rounded raised />
+                <!-- <Button icon="fas fa-sync" rounded raised /> -->
             </div>
             <div class="d-flex justify-content-end">
                 <span class="p-input-icon-left">
@@ -397,8 +355,8 @@ img {
                 </span>
             </div>
         </template>
-        <template #empty> No customers found. </template>
-        <template #loading> Loading customers data. Please wait. </template>
+        <template #empty> No products found. </template>
+        <template #loading> Loading products data. Please wait. </template>
         <Column field="ID_Product" sortable  header="Code"></Column>
         <Column header="Ảnh sản phẩm">
             <template #body="slotProps">
@@ -435,7 +393,7 @@ img {
         </Column>
         <Column header="Giá" sortable sortField="Price">
             <template #body="splotProps">
-                {{ formatCash(splotProps.data.Price) }}
+                {{ LazyConvert.ToMoney(splotProps.data.Price) }}
             </template>
         </Column>
         <Column field="category.Name_Category" header="Danh mục" sortable></Column>
@@ -444,17 +402,18 @@ img {
                 <button data-toggle="modal" class="btn btn-warning p-1 m-1" @click="updateProduct(slotProps.data)">
                     Update
                 </button>
+             
                 <button class="btn btn-danger p-1 m-1" @click="deleteProduct(slotProps.data.ID_Product)">
                     Delete
                 </button>
             </template>
         </Column>
 
-        <template #footer> In total there are {{ products ? products.length : 0 }} products. </template>
+        <template #footer> Tổng cộng {{ products ? products.length : 0 }} sản phẩm. </template>
     </DataTable>
     
     <div id="thongbao"></div>
-    <!-- INSERT MODEL -->
+    <!-- FORM MODEL -->
     <div class="modal fade" id="form_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -465,10 +424,10 @@ img {
                 <Button icon="fas fa-times-circle" severity="danger" data-dismiss="modal" />
             </div>
             <div class="modal-body">
-                <form ref="formInsertRef" method="POST" @submit="InsertProduct">
+                <form ref="formInsertRef" method="POST" @submit="SubmitForm">
                     <div class="mb-3">
                         <label for="image_product" class="col-form-label">Ảnh sản phẩm đại diện:</label>
-                        <input type="file" class="form-control"  @change="onUploadImageProduct" accept="image/png, image/jpeg, image/jpg" required>
+                        <input type="file" class="form-control"  @change="onUploadImageProduct" accept="image/png, image/jpeg, image/jpg">
                         
                         <img id="avt" :src="currentForm.Avatar" style="padding: 10px; width: 85px;">
                     </div>
@@ -555,7 +514,8 @@ img {
                     <div class="modal-footer">
                         <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> -->
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Insert</button>
+                        <button v-if="mode == 'insert'" type="submit" class="btn btn-primary">Insert</button>
+                        <button v-else type="submit" class="btn btn-primary">Update</button>
                     </div>
                 </form>
             </div>
@@ -563,25 +523,5 @@ img {
         </div>
     </div>
    
-    <!-- UPDATE .CSV MODEL -->
-    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Upload products by .csv file</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <form id='uploadForm'  enctype="multipart/form-data">
-                    <p>Định dạng: Tiêu đề, mô tả, id category, giá</p>
-                <input type="file" name="fileToUpload" id="fileToUpload">
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary" id="upload_product">Update</button>
-                </div>
-            </form>
-        </div>
-        </div>
-    </div>
-    </div>
-</template>
+    
+</template>../../interface2../../interface2

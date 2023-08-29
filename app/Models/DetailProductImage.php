@@ -9,6 +9,7 @@ class DetailProductImage extends Model
 {
     use HasFactory;
     protected $table = "detail_product_image";
+    public $primaryKey = 'ID_DPI';
     protected $fillable = [
         'ID_Product',
         'Image'

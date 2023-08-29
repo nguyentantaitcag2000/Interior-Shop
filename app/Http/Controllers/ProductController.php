@@ -21,16 +21,11 @@ class ProductController extends Controller
     public function index()
     {
       
-        $products = Product::select([
+        $products = $this->getRelates(Product::select([
             'product.Size', 'product.ID_Product', 'product.ID_Category', 
             'product.Name_Product', 'product.Description', 'product.Price', 'product.Avatar',
             'ID_S'
-     
-        ])
-        ->with('detailProductImage')
-        ->with('category')
-        ->with(['detailProductMaterial','detailProductMaterial.material'])
-        ->with(['detailProductColor','detailProductColor.color'])
+        ]))
         ->orderByDesc('product.ID_Product')
         ->get();
     
@@ -54,16 +49,8 @@ class ProductController extends Controller
 
         
             return DB::transaction(function(){
-                // Đường dẫn cơ bản đến thư mục sản phẩm
-                $timestamp = Carbon::now()->timestamp;
-                $baseDirectoryImage = "images/products/product_" . $timestamp;
-                $filenameAVT = $timestamp . '_main' . '.jpg';
-                $imagePathAVT = $baseDirectoryImage . '/' . $filenameAVT;
-                // Chuyển base64 thành dữ liệu hình ảnh thực sự
-                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', request('Avatar')));
-                // Lưu hình ảnh vào thư mục mong muốn
-                Storage::disk('public')->put($imagePathAVT, $imageData);
-
+                $Image = new Image();
+                
 
                 $ID_Materials = request('ID_Material');
                 $ID_Colors = request('ID_Color');
@@ -73,7 +60,7 @@ class ProductController extends Controller
                     'Name_Product' => request('Name_Product'),
                     'Description' => request('Description'),
                     'Price' => request('Price'),
-                    'Avatar' => '/storage/' . $imagePathAVT,
+                    'Avatar' =>  $Image->imagePathAVT_Full,
                     'Size' => request('Size'),
                     'ID_S' => request('ID_S'),
                 ]);
@@ -82,64 +69,22 @@ class ProductController extends Controller
                 // MATERIAL
                 // MATERIAL
                 // MATERIAL
-                $materialsToInsert = [];
-                for ($i = 0; $i < count($ID_Materials); $i++) {
-                    $materialsToInsert[] = [
-                        'ID_Product' => $productID,
-                        'ID_Material' => $ID_Materials[$i]
-                    ];
-                }
-                DetailProductMaterial::insert($materialsToInsert);
+                $this->insertDetailMaterial($ID_Materials,$productID);
                 // COLOR
                 // COLOR
                 // COLOR
-                $colorsToInsert = [];
-                for ($i = 0; $i < count($ID_Colors); $i++) {
-                    $colorsToInsert[] = [
-                        'ID_Product' => $productID,
-                        'ID_Color' => $ID_Colors[$i]
-                    ];
-                }
-                DetailProductColor::insert($colorsToInsert);
-                
+                $this->insertDetailColor($ID_Colors,$productID);
                 // DETAIL IMAGE
                 // DETAIL IMAGE
                 // DETAIL IMAGE
-                $imagesToInsert = [];
 
-                
-
-                for ($i = 0; $i < count($DetailImages); $i++) {
-                    // Tạo tên tệp dựa trên timestamp hiện tại để đảm bảo rằng mỗi tên tệp là duy nhất
-                    $filename = $timestamp . '_' . $i . '.jpg';
-
-                    $imagePath = $baseDirectoryImage . '/' . $filename;
-
-                    // Chuyển base64 thành dữ liệu hình ảnh thực sự
-                    $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $DetailImages[$i]));
-
-                    // Lưu hình ảnh vào thư mục mong muốn
-                    Storage::disk('public')->put($imagePath, $imageData);
-
-                    // Thêm đường dẫn hình ảnh vào mảng để chèn vào cơ sở dữ liệu
-                    $imagesToInsert[] = [
-                        'ID_Product' => $productID,
-                        'Image' => '/storage/' . $imagePath
-                    ];
-                }
-
-                DetailProductImage::insert($imagesToInsert);
-                // Sau khi tạo sản phẩm, truy vấn lại sản phẩm với các quan hệ bạn muốn
-                $productWithRelations = Product::with('detailProductImage')
-                                                ->with('category')
-                                                ->with(['detailProductMaterial','detailProductMaterial.material'])
-                                                ->with(['detailProductColor','detailProductColor.color'])
-                ->where('ID_Product', $product->ID_Product)
-                ->first();
+                $Image->UploadAVT(request('Avatar'));
+                $Image->UploadAndDetailImage_And_Database($DetailImages,$productID);
+             
                 return response()->json([
                     'status' => 200,
                     'message' => 'Success',
-                    'object' => $productWithRelations
+                    'object' => $this->show( $product->ID_Product)
                 ], 200); // Mã trạng thái HTTP 200 cho response
             },5); 
             
@@ -163,7 +108,9 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        //
+        return $this->getRelates(Product::query()) 
+        ->where('ID_Product', $id)
+        ->first();
     }
 
     /**
@@ -179,7 +126,71 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        try{
+
+            
+            return DB::transaction(function() use ($id){
+                
+                $Image = new Image();
+                $myProduct = Product::find($id);
+                $oldFolderImage = $myProduct->Avatar;
+
+                $ID_Materials = request('ID_Material');
+                $ID_Colors = request('ID_Color');
+                $DetailImages = request('DetailImage');
+                
+                foreach (Product::find($id)->detailProductImage as $row) {
+                    $row->delete();
+                }
+                $myProduct->ID_Category = request('ID_Category');
+                $myProduct->Name_Product = request('Name_Product');
+                $myProduct->Description = request('Description');
+                $myProduct->Price = request('Price');
+                $myProduct->Avatar = $Image->imagePathAVT_Full;
+                $myProduct->Size = request('Size');
+                $myProduct->ID_S = request('ID_S');
+
+                $myProduct->save();
+                
+                $productID = $id;
+                // MATERIAL
+                // MATERIAL
+                // MATERIAL
+                $this->insertDetailMaterial($ID_Materials,$productID);
+                // COLOR
+                // COLOR
+                // COLOR
+                $this->insertDetailColor($ID_Colors,$productID);
+                // DETAIL IMAGE
+                // DETAIL IMAGE
+                // DETAIL IMAGE
+
+                $Image->UploadAVT(request('Avatar'));
+                $Image->UploadAndDetailImage_And_Database($DetailImages,$productID);
+             
+                //Sau khi xong thì xóa đi folder image cũ
+                $this->deleteFolderImage($oldFolderImage);
+                
+                return response()->json([
+                    'status' => 200,
+                    'message' => 'Success',
+                    'object' => $this->show($productID)
+                ], 200); // Mã trạng thái HTTP 200 cho response
+            },5); 
+            
+        }
+        catch (\Exception $e) {
+            // return response()->json([
+            //     'status' => $e->getCode() ?: 500,
+            //     'message' => 'Failed',
+            //     'object' =>  $e->getMessage()
+            // ], 500); // khi return ra 500 sẽ bị lỗi văng ra cả axios
+            return response()->json([
+                'status' => $e->getCode() ?: 500,
+                'message' => 'Failed',
+                'object' =>  $e->getMessage()
+            ]); 
+        }
     }
 
     /**
@@ -208,24 +219,13 @@ class ProductController extends Controller
                 //     return str_replace('/storage/', '', $path);
                 // }, $detailImages);
     
-                // // Xóa hình ảnh chính
-                // Storage::disk('public')->delete($avatarPath);
-    
-                // // Xóa danh sách hình ảnh chi tiết
-                // Storage::disk('public')->delete($detailImagesPaths);
+                
     
                 // Xóa sản phẩm khỏi cơ sở dữ liệu
                 $product->delete();
                 
-                // Xác định và xóa thư mục cha chứa các hình ảnh
-                // Do cả hình ảnh avt và detail đều chung 1 thư mục nên ta xóa bằng cách này:
-                $avatarParts = explode('/', $product->Avatar);
-                $desiredParts = array_slice($avatarParts, 0, -1); // Lấy tất cả các phần từ trừ phần tử cuối
-                $desiredPath = implode('/', $desiredParts); // Ghép lại thành chuỗi
-                $desiredPath = str_replace('/storage/', '', $desiredPath);
-                // Để xóa thư mục, bạn chỉ cần xóa thư mục cha (không cần toàn bộ đường dẫn)
-                Storage::disk('public')->deleteDirectory($desiredPath);
-
+                
+                $this->deleteFolderImage($product->Avatar);
 
                 return response()->json([
                     'status' => 200,
@@ -241,4 +241,137 @@ class ProductController extends Controller
         }
     
     }
+    private function getRelates($table)
+    {
+        return $table->with('detailProductImage')
+        ->with('category')
+        ->with(['detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
+            ,'detailProductMaterial.material'])
+        ->with(['detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
+            ,'detailProductColor.color']);
+    }
+   
+    private function insertDetailMaterial($array_id_materials,$productID)
+    {
+        $materialsToInsert = [];
+        for ($i = 0; $i < count($array_id_materials); $i++) {
+            $materialsToInsert[] = [
+                'ID_Product' => $productID,
+                'ID_Material' => $array_id_materials[$i]
+            ];
+        }
+        DetailProductMaterial::insert($materialsToInsert);
+    }
+    private function insertDetailColor($array_id_colors,$productID)
+    {
+        $colorsToInsert = [];
+        for ($i = 0; $i < count($array_id_colors); $i++) {
+            $colorsToInsert[] = [
+                'ID_Product' => $productID,
+                'ID_Color' => $array_id_colors[$i]
+            ];
+        }
+        DetailProductColor::insert($colorsToInsert);
+    }
+    
+   
+    private function deleteFolderImage($pathAvatar)
+    {
+        // // Xóa hình ảnh chính
+        // Storage::disk('public')->delete($avatarPath);
+
+        // // Xóa danh sách hình ảnh chi tiết
+        // Storage::disk('public')->delete($detailImagesPaths);
+        // Xác định và xóa thư mục cha chứa các hình ảnh
+        // Do cả hình ảnh avt và detail đều chung 1 thư mục nên ta xóa bằng cách này:
+        $avatarParts = explode('/', $pathAvatar);
+        $desiredParts = array_slice($avatarParts, 0, -1); // Lấy tất cả các phần từ trừ phần tử cuối
+        $desiredPath = implode('/', $desiredParts); // Ghép lại thành chuỗi
+        $desiredPath = str_replace('/storage/', '', $desiredPath);
+        // Để xóa thư mục, bạn chỉ cần xóa thư mục cha (không cần toàn bộ đường dẫn)
+        Storage::disk('public')->deleteDirectory($desiredPath);
+    }
+}
+class Image {
+    private $timestamp = null;
+    public $imagePathAVT = null; 
+    public $imagePathAVT_Full = null;
+    public function __construct() {
+        $this->timestamp = Carbon::now()->timestamp;
+        // Đường dẫn cơ bản đến thư mục sản phẩm
+        $baseDirectoryImage = "images/products/product_" . $this->timestamp;
+        $filenameAVT = $this->timestamp . '_main' . '.jpg';
+        $this->imagePathAVT =  $baseDirectoryImage . '/' . $filenameAVT;
+        $this->imagePathAVT_Full = '/storage/' . $this->imagePathAVT;
+    }
+    public function UploadAVT($base64){
+        
+        if($this->isBase64($base64))
+        {
+                // Chuyển base64 thành dữ liệu hình ảnh thực sự
+                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $base64));
+                // Lưu hình ảnh vào thư mục mong muốn
+                Storage::disk('public')->put($this->imagePathAVT, $imageData);
+        }
+        else{
+            // Nếu không phải là base64 thì giả định nó là một đường dẫn hình ảnh
+            $base64 = str_replace('/storage/','',$base64);
+            Storage::disk('public')->copy($base64, $this->imagePathAVT);
+        }
+        
+    }
+    private function isBase64($string) {
+        return preg_match('#^data:image/\w+;base64,#i', $string);
+    }
+    public function UploadAndDetailImage_And_Database($array_base64, $productID) {
+        $baseDirectoryImage = "images/products/product_" . $this->timestamp;
+        $imagesToInsert = [];
+    
+        for ($i = 0; $i < count($array_base64); $i++) {
+            $filename = $this->timestamp . '_' . $i . '.jpg';
+            $imagePath = $baseDirectoryImage . '/' . $filename;
+            
+            // Kiểm tra xem chuỗi có phải là base64 hay không
+            if ($this->isBase64($array_base64[$i])) {
+                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $array_base64[$i]));
+                Storage::disk('public')->put($imagePath, $imageData);
+            } else {
+                // Nếu không phải là base64 thì giả định nó là một đường dẫn hình ảnh
+                $array_base64[$i] = str_replace('/storage/','',$array_base64[$i]);
+                Storage::disk('public')->copy($array_base64[$i], $imagePath);
+            }
+    
+            $imagePathForDB = '/storage/' . $imagePath;
+            $imagesToInsert[] = [
+                'ID_Product' => $productID,
+                'Image' => $imagePathForDB
+            ];
+        }
+        DetailProductImage::insert($imagesToInsert);
+    }
+    // public function UploadAndDetailImage_And_Database($array_base64,$productID)
+    // {
+    //     // Đường dẫn cơ bản đến thư mục sản phẩm
+    //     $baseDirectoryImage = "images/products/product_" . $this->timestamp;
+    //     $imagesToInsert = [];
+    //     for ($i = 0; $i < count($array_base64); $i++) {
+    //         // Tạo tên tệp dựa trên timestamp hiện tại để đảm bảo rằng mỗi tên tệp là duy nhất
+    //         $filename = $this->timestamp . '_' . $i . '.jpg';
+
+    //         $imagePath = $baseDirectoryImage . '/' . $filename;
+
+    //         // Chuyển base64 thành dữ liệu hình ảnh thực sự
+    //         $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $array_base64[$i]));
+
+    //         // Lưu hình ảnh vào thư mục mong muốn
+    //         Storage::disk('public')->put($imagePath, $imageData);
+
+    //         // Thêm đường dẫn hình ảnh vào mảng để chèn vào cơ sở dữ liệu
+    //         $imagesToInsert[] = [
+    //             'ID_Product' => $productID,
+    //             'Image' => '/storage/' . $imagePath
+    //         ];
+    //     }
+    //     DetailProductImage::insert($imagesToInsert);
+    // }
 }

@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ColorController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
@@ -21,8 +23,19 @@ use App\Http\Controllers\ProductController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+Route::group(['middleware' => ['web']], function () {
+    Route::post('/signin', [AuthController::class, 'signin']);
+
+});
+
+Route::post('/signup', [UserController::class, 'store']);
+Route::post('/InsertCategory', [CategoryController::class, 'store']);
 Route::post('/InsertProduct', [ProductController::class, 'store']);
+Route::post('/UpdateCategory/{id}', [CategoryController::class, 'update']);
+Route::post('/UpdateProduct/{id}', [ProductController::class, 'update']);
+Route::delete('/delete/category/{id}', [CategoryController::class, 'destroy']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+Route::get('/product/{id}', [ProductController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/materials', [MaterialController::class, 'index']);
