@@ -7,6 +7,7 @@ let myIndex = 0;
 
 const categories = ref<category[]>();
 const products = ref<product[]>();
+const productsInCard = ref();
 function carousel() {
   var i;
   var timeOut = 4000;
@@ -19,7 +20,7 @@ function carousel() {
   x[myIndex-1].style.display = "block";
   var dataTimeout = x[myIndex-1].getAttribute('data-timeout');
   if(dataTimeout!=null)
-    timeOut = parseInt(dataTimeout);   
+    timeOut = parseInt(dataTimeout);
   setTimeout(carousel, timeOut); // Change image every 2 seconds
 
 }
@@ -30,6 +31,9 @@ onMounted(()=>{
     });
     axios.get('/api/products').then(res=>{
         products.value = res.data;
+    });
+    axios.get('/api/shoppingcart').then(res=>{
+        productsInCard.value = res.data;
     });
 });
 
@@ -59,7 +63,7 @@ onMounted(()=>{
 
     <div class="container bg-light rounded pt-2 mt-3 change-background" data-background="#f6d9d9">
         <div class="row">
-            <h3 class="h3 w3-animate-opacity">Danh sách sản phẩm</h3>    
+            <h3 class="h3 w3-animate-opacity">Danh sách sản phẩm</h3>
         </div>
         <div class="row w-100">
             <div v-for="pr in products" class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
@@ -68,15 +72,15 @@ onMounted(()=>{
                         <router-link :to="'/product/' + pr.ID_Product" >
                             <img class="pic-1" :src="pr.Avatar">
                         </router-link>
-                    
+
                     </div>
                     <div class="product-content">
                         <h3 class="title"><a href="#">{{ pr.Name_Product }}</a></h3>
                         <span class="price">{{ LazyConvert.ToMoney(pr.Price) }}</span>
                     </div>
                 </div>
-            </div> 
-            
+            </div>
+
 
         </div>
     </div>
@@ -84,10 +88,10 @@ onMounted(()=>{
     <!-- <?php if(isset($data['Product_Suggestion'] )){ ?>
     <div class="container bg-light rounded pt-2 mt-3">
         <div class="row">
-            <h3 class="h3 w3-animate-opacity">Những sản phẩm liên quan khác</h3>    
+            <h3 class="h3 w3-animate-opacity">Những sản phẩm liên quan khác</h3>
         </div>
         <div class="row w-100">
-            <?php foreach ($data['Product_Suggestion'] as $key => $value) { 
+            <?php foreach ($data['Product_Suggestion'] as $key => $value) {
                 $title = $value['Name_Product'];
                 if (strlen($value['Name_Product']) > 34) {
                   $title = mb_substr($value['Name_Product'], 0, 34) . "...";
@@ -110,9 +114,9 @@ onMounted(()=>{
                             <span class="price"><?=number_format($value['Price'],0) . ' đ'?></span>
                         </div>
                     </div>
-                </div> 
+                </div>
             <?php }?>
-            
+
 
         </div>
     </div>

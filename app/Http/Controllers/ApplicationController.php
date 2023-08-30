@@ -21,6 +21,7 @@ class ApplicationController extends Controller
     public function logout()
     {
         session()->remove('email');
+        return redirect('/');
     }
     
 }

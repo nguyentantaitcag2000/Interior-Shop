@@ -6,6 +6,8 @@ use App\Http\Controllers\ColorController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ShoppingCartController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
@@ -28,6 +30,7 @@ Route::group(['middleware' => ['web']], function () {
 
 });
 
+Route::post('/shoppingcart', [ShoppingCartController::class, 'index']);
 Route::post('/signup', [UserController::class, 'store']);
 Route::post('/InsertCategory', [CategoryController::class, 'store']);
 Route::post('/InsertProduct', [ProductController::class, 'store']);

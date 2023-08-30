@@ -43,9 +43,8 @@ use Illuminate\Support\Facades\Session;
                 
                 </div>
                 <div class="d-flex justify-content-end">
-                    <h1>{{ session('email') }}</h1>
 
-                    <?php if(Session::get('email') == '') {?>
+                    <?php if(session()->has('email') == false) {?>
                         <div>
                                 <a href="/auth/signin" class="btn btn-success">Sign in</a>
                                 <a href="/auth/signup" class="btn btn-danger">Sign up</a>
@@ -58,13 +57,13 @@ use Illuminate\Support\Facades\Session;
                                 <img src="/images/shopping-cart.png" class="me-3" style="width:35px;padding: 0;">  
                             </a>
                         </div>
-                        <?php if(isset($_SESSION['email'])) {?>
+                        <?php if(session()->has('email')) {?>
                         <div class="btn dropdown">
-                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                            <?= explode('@', $_SESSION['email'])[0] ;?>
+                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-expanded="false">
+                            <?=session('email');?>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                            <li><a class="dropdown-item " href="/Auth/Logout">Đăng xuất</a></li>
+                            <li><a class="dropdown-item " href="/auth/logout">Đăng xuất</a></li>
                             </ul>
                             <img src="./public/images/profile.png" style="width:35px">
                         </div>
