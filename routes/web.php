@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ProductController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ProductExport;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +21,10 @@ use Illuminate\Support\Facades\Route;
 // Route::get('/', function () {
 //     return view('welcome');
 // });
+Route::get('/export', function () {
+    return Excel::download(new ProductExport, 'products.xlsx');
+});
+Route::get('/image', 'ImageController@getImage');
 Route::get('auth/logout',[ApplicationController::class,'logout']);
 Route::get('/auth/{view}',[ApplicationController::class,'auth'])->where('view','(.*)');
 Route::get('admin/{view}',[ApplicationController::class,'admin'])->where('view','(.*)');

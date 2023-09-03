@@ -9,12 +9,13 @@ class ShoppingCart extends Model
 {
     use HasFactory;
     protected $table = 'shoppingcart';
-    protected $primarykey = 'ID_SC';
+    protected $primaryKey = 'ID_SC';
     public $timestamps = false;
     protected $fillable = [
-        'ID_User'
+        'ID_User',
+        'ID_CS',
     ];
-    public function cartdetail()
+    public function cart_detail()
     {
         return $this->hasMany(CartDetail::class,'ID_SC');
     }

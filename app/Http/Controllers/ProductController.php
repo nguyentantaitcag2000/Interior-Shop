@@ -8,27 +8,46 @@ use App\Models\DetailProductImage;
 use App\Models\DetailProductMaterial;
 use App\Models\Material;
 use App\Models\Product;
+use App\Repositories\Auth\AuthRepository;
+use App\Repositories\Auth\AuthRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
+use function PHPSTORM_META\map;
+
 class ProductController extends Controller
 {
+    private $authRepository;
+    public function __construct(AuthRepositoryInterface $authRepository) {
+        $this->authRepository = $authRepository;
+    }
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index($by,$keyword)
     {
+        $query = Product::select()
+            ->with(['category','detailProductImage','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
+            ,'detailProductMaterial.material',
+            'detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
+            ,'detailProductColor.color']);
+
+        if($by == 'category')
+        {
+            $query->whereHas('category',function($query) use ($keyword){
+                $query->where('Name_Category',$keyword);
+            });
+        }
+        else if($by == 'all')
+        {
+            $query->where('Name_Product','LIKE','%' . $keyword . '%');
+        }
+        
+        $products = $query->orderByDesc('product.ID_Product')
+            ->get();
       
-        $products = $this->getRelates(Product::select([
-            'product.Size', 'product.ID_Product', 'product.ID_Category', 
-            'product.Name_Product', 'product.Description', 'product.Price', 'product.Avatar',
-            'ID_S'
-        ]))
-        ->orderByDesc('product.ID_Product')
-        ->get();
-    
         return $products;
     }
 
@@ -291,6 +310,19 @@ class ProductController extends Controller
         // Để xóa thư mục, bạn chỉ cần xóa thư mục cha (không cần toàn bộ đường dẫn)
         Storage::disk('public')->deleteDirectory($desiredPath);
     }
+    public function inventory()
+    {
+        $this->authRepository->CheckLogin();
+        // Lấy danh sách sản phẩm với Amount_Product > 0
+        $products = Product::where('Amount_Product','>',0)->get();
+        // Tính tổng Amount_Product cho tất cả các sản phẩm đó
+        $totalAmount = $products->sum('Amount_Product');
+        return json_encode([
+            'status' => 200,
+            'products' => $products,
+            'totalAmount' => $totalAmount
+        ]);
+    }
 }
 class Image {
     private $timestamp = null;
@@ -349,29 +381,5 @@ class Image {
         }
         DetailProductImage::insert($imagesToInsert);
     }
-    // public function UploadAndDetailImage_And_Database($array_base64,$productID)
-    // {
-    //     // Đường dẫn cơ bản đến thư mục sản phẩm
-    //     $baseDirectoryImage = "images/products/product_" . $this->timestamp;
-    //     $imagesToInsert = [];
-    //     for ($i = 0; $i < count($array_base64); $i++) {
-    //         // Tạo tên tệp dựa trên timestamp hiện tại để đảm bảo rằng mỗi tên tệp là duy nhất
-    //         $filename = $this->timestamp . '_' . $i . '.jpg';
-
-    //         $imagePath = $baseDirectoryImage . '/' . $filename;
-
-    //         // Chuyển base64 thành dữ liệu hình ảnh thực sự
-    //         $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $array_base64[$i]));
-
-    //         // Lưu hình ảnh vào thư mục mong muốn
-    //         Storage::disk('public')->put($imagePath, $imageData);
-
-    //         // Thêm đường dẫn hình ảnh vào mảng để chèn vào cơ sở dữ liệu
-    //         $imagesToInsert[] = [
-    //             'ID_Product' => $productID,
-    //             'Image' => '/storage/' . $imagePath
-    //         ];
-    //     }
-    //     DetailProductImage::insert($imagesToInsert);
-    // }
+    
 }

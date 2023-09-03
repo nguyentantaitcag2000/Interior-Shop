@@ -4,7 +4,7 @@ import './lazycodet.css';
 interface AlertProcessingParams {
     requireConfirm?: boolean;
     alertMessage?: string;
-    workerFunction: () => void; // hoặc kiểu hàm khác bạn mong muốn
+    workerFunction: () => Promise<any>; // hoặc kiểu hàm khác bạn mong muốn
     alertTitle?: string;
     processMessage?: string;
     processTitle?: string;

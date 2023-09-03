@@ -9,26 +9,28 @@ import Dropdown from "primevue/dropdown";
 import MultiSelect from "primevue/multiselect";
 import $ from 'jquery';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
-import {material,color,category,detailProductColor,detailProductMaterial,detailProductImage} from '../../interface';
+import {material,color,category,detailProductColor,detailProductMaterial,detailProductImage,
+    importHistoryDetail} from '../../interface';
 
 interface FormState{
-    'ID_Product': number | null,
-    'ID_Category': number | null,
+    'ID_Product': number ,
+    'ID_Category': number ,
     'ID_Material': number[],
     'ID_Color': number[],
     'ID_S': number | null,
     'Name_Product': string,
     'Description': string,
-    'Price': number | null,
+    'Price': number ,
     'Avatar': string,
     'DetailImage': string[],
     'Size': string,
-    'material': material | null,
-    'color': color | null,
-    'category': category | null,
-    'detail_product_material': detailProductMaterial[] | null,
-    'detail_product_color': detailProductColor[] | null,
-    'detail_product_image': detailProductImage[] | null,
+    'material': material ,
+    'color': color ,
+    'category': category ,
+    'detail_product_material': detailProductMaterial[] ,
+    'detail_product_color': detailProductColor[] ,
+    'detail_product_image': detailProductImage[] ,
+    import_history_detail: importHistoryDetail 
 }
 
 const products = ref<FormState[]>();
@@ -40,29 +42,48 @@ const formInsertRef = ref<any>(null);
 const mode = ref('insert'); // Chế độ <=> Sử dụng 'update' khi muốn cập nhật
 const loading = ref(true);
 const initialFormState:FormState = {
-    'ID_Product': null,
-    'ID_Category': null,
+    'ID_Product': -1,
+    'ID_Category': -1,
     'ID_Material': [],
     'ID_Color': [],
-    'ID_S': null,
+    'ID_S': -1,
     'Name_Product': '',
     'Description': '',
-    'Price': null,
+    'Price': 1,
     'Avatar': '',
     'DetailImage': [],
     'Size': '',
-    'material': null,
-    'color': null,
-    'category' : null,
-    'detail_product_material': null,
-    'detail_product_color': null,
-    'detail_product_image': null
+    'material': {
+        ID_Material: -1,
+        Name_Material: ''
+    },
+    'color': {
+        ID_Color: -1,
+        Name_Color: ''
+    },
+    'category' : {
+        Icon: '',
+        ID_Category: -1,
+        Name_Category: ''
+    },
+    'detail_product_material': [],
+    'detail_product_color': [],
+    'detail_product_image': [],
+    'import_history_detail': {
+        Amount:1,
+        ID_IH:-1,
+        ID_Product:-1,
+        Price:-1
+
+    }
 };
 // const form = reactive({...initialFormState});
+//JSON.parse(JSON.stringify(initialFormState)) dùng cái này để làm cho initialFormState không bị thay đổi giá trị khi thay đổi các biến form
 const form = reactive<FormState>(JSON.parse(JSON.stringify(initialFormState)));
 let form_update = reactive<FormState>(JSON.parse(JSON.stringify(initialFormState)));
+let form_import = reactive<FormState>(JSON.parse(JSON.stringify(initialFormState)));
 const getUsers = () => {
-    axios.get('/api/products').then((res)=>{
+    axios.get('/api/products/_/_').then((res)=>{
         products.value = res.data;
         loading.value = false;
     });
@@ -96,14 +117,19 @@ const getColors_String = (color_obj:FormState[])=>{
         });
     return arr.join(', ');
 }
-// const currentForm = computed<FormState>({
-//     get() {
-//         return (mode.value == 'insert' ? form : form_update) as FormState;    
-//     },
-//     set(){}
+const currentForm = computed<FormState>({
+    get() {
+        if(mode.value == 'insert') 
+            return form as FormState
+        else if(mode.value == 'import') 
+            return form_import as FormState
+        else 
+            return form_update as FormState
+    },
+    set(){}
     
-// } ) 
-const currentForm = computed<FormState>(() => (mode.value == 'insert' ? form : form_update) as FormState);
+} ) 
+// const currentForm = computed<FormState>(() => (mode.value == 'insert' ? form : form_update) as FormState);
 
 // Khai báo fillters cho chức năng tìm kiếm ở datatable
 const filters = reactive({
@@ -185,6 +211,16 @@ const updateProduct = (productData:FormState) => {
         form_update.DetailImage = productData.detail_product_image.map(item => {
             return item.Image;
         });
+}
+const importProduct = (productData:FormState) => {
+    $('#form_modal').modal('show');
+    mode.value = 'import';
+    Object.keys(productData).forEach(key=> {
+        if(productData[key as keyof FormState] !== undefined)
+        {
+            (form_import as any)[key] = productData[key as keyof FormState];
+        }
+    });
 }
 const deleteProduct = (ID_Product:number) => {
     LazyCodet.AlertProcessing({
@@ -402,7 +438,9 @@ img {
                 <button data-toggle="modal" class="btn btn-warning p-1 m-1" @click="updateProduct(slotProps.data)">
                     Update
                 </button>
-             
+                <button data-toggle="modal" class="btn btn-primary p-1 m-1" @click="importProduct(slotProps.data)">
+                    Import
+                </button>
                 <button class="btn btn-danger p-1 m-1" @click="deleteProduct(slotProps.data.ID_Product)">
                     Delete
                 </button>
@@ -419,6 +457,7 @@ img {
             <div class="modal-content">
             <div class="modal-header">
                 <h5 v-if="mode=='insert'" class="modal-title" id="exampleModalLabel">Insert a new product</h5>
+                <h5 v-else-if="mode=='import'" class="modal-title" id="exampleModalLabel">Import</h5>
                 <h5 v-else class="modal-title" id="exampleModalLabel">Update a new product</h5>
                 <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
                 <Button icon="fas fa-times-circle" severity="danger" data-dismiss="modal" />
@@ -426,97 +465,109 @@ img {
             <div class="modal-body">
                 <form ref="formInsertRef" method="POST" @submit="SubmitForm">
                     <div class="mb-3">
-                        <label for="image_product" class="col-form-label">Ảnh sản phẩm đại diện:</label>
-                        <input type="file" class="form-control"  @change="onUploadImageProduct" accept="image/png, image/jpeg, image/jpg">
-                        
-                        <img id="avt" :src="currentForm.Avatar" style="padding: 10px; width: 85px;">
+                        <label for="name_product" class="col-form-label">Tên sản phẩm:</label>
+                        <input :disabled="mode === 'import'" v-model="currentForm.Name_Product" type='text' class="form-control" id="name_product" required/>
                     </div>
-                    <div class="mb-3">
-                        <label for="detail_image_product" class="col-form-label">Ảnh sản phẩm chi tiết:</label>
-
-                        <input type="file" class="form-control" @change="onUploadDetailImage" accept="image/png, image/jpeg, image/jpg"  multiple>
-                        <div class="row">
-                            <div v-for="src in currentForm.DetailImage" class="position-relative" style="width: 100px">
-                                <span @click="DeleteImage" class="close btn" style="opacity: 1;;position:absolute;background-color:#fff;color:red;right:10px;padding: 0">&times;</span>
-                                <img :src="src" style="padding: 10px; width: 85px;" >    
+                    <div v-if="mode=='import'">
+                        <div class="mb-3">
+                            <label class="form-label" for="price_product">Số lượng:</label>
+                            <input v-model="(currentForm.import_history_detail.Amount)" type="number" class="form-control"  required/>
+                        </div>
+                    </div>
+                    <div v-else>
+                        <div class="mb-3">
+                            <div class="custom-file">
+                                <label for="image_product" class="custom-file-label">Ảnh sản phẩm đại diện:</label>
+                                <input type="file" class="custom-file-input"  @change="onUploadImageProduct" accept="image/png, image/jpeg, image/jpg">
+                            </div>
+                            <img id="avt" :src="currentForm.Avatar" style="padding: 10px; width: 85px;">
+                        </div>
+                        <div class="mb-3">
+                            <div class="custom-file">
+                                <label for="detail_image_product" class="custom-file-label">Ảnh sản phẩm chi tiết:</label>
+                                <input type="file" class="custom-file-input" @change="onUploadDetailImage" accept="image/png, image/jpeg, image/jpg"  multiple>
                             </div>
                             
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="name_product" class="col-form-label">Danh mục sản phẩm:</label>
-                        <div class="card flex justify-content-center">
-                            <!-- <Dropdown v-model="selectedCategoty" :options="categories" optionLabel="Name_Category" placeholder="Select a City" class="w-full md:w-14rem" style="z-index: 10008;" /> -->
-                            <Dropdown v-model="currentForm.ID_Category" :options="categories" optionLabel="Name_Category" optionValue="ID_Category" placeholder="Chọn 1 danh mục" class="w-full md:w-14rem">
-                                <template #value="slotProps">
-                                    <div v-if="selectedCategoryDetail" class="d-flex align-items-around">
-                                        <img  :src="selectedCategoryDetail.Icon.replace('/public','')" style="width: 30px;" />
-                                        <div class="ml-2">{{ selectedCategoryDetail.Name_Category }}</div>
-                                    </div>
-                                    <span v-else>
-                                        {{ slotProps.placeholder }}
-                                    </span>
-                                </template>
-                                <template #option="slotProps">
-                                    <div class="d-flex align-items-around">
-                                        <img  :src="slotProps.option.Icon.replace('/public','')" style="width: 30px" />
-                                        <div class="ml-3">{{ slotProps.option.Name_Category }}</div>
-                                    </div>
-                                </template>
-                            </Dropdown>
-                        </div>
-                            
-                    </div>
-                    <div class="mb-3">
-                        <label for="name_product" class="col-form-label">Tên sản phẩm:</label>
-                        <input v-model="currentForm.Name_Product" type='text' class="form-control" id="name_product" required/>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description_product" class="col-form-label">Mô tả sản phẩm:</label>
-                        <textarea v-model="currentForm.Description" class="form-control" id="description_product" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="size_product" class="col-form-label">Kích thước:</label>
-                        <input v-model="currentForm.Size" type='text' class="form-control" id="size_product"/>
-                    </div>
-                    <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <label class="input-group-text" for="inputGroupSelect01">Chất liệu:</label>
+                            <div class="row">
+                                <div v-for="src in currentForm.DetailImage" class="position-relative" style="width: 100px">
+                                    <span @click="DeleteImage" class="close btn" style="opacity: 1;;position:absolute;background-color:#fff;color:red;right:10px;padding: 0">&times;</span>
+                                    <img :src="src" style="padding: 10px; width: 85px;" >    
                                 </div>
-                                <!-- <Dropdown v-model="selectedMaterial" :options="materials" optionLabel="Name_Material" placeholder="Chọn chất liệu" class="w-full md:w-14rem" style="z-index: 10008;" /> -->
-                                <MultiSelect v-model="currentForm.ID_Material" display="chip" :options="materials" optionLabel="Name_Material" optionValue="ID_Material" placeholder="Chọn chất liệu"
-                                    :maxSelectedLabels="3" class="w-full md:w-20rem" />
-                                <div class="container"></div>
-                                <input id="material_list" type="text" hidden />
+                                
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="name_product" class="col-form-label">Danh mục sản phẩm:</label>
+                            <div class="card flex justify-content-center">
+                                <!-- <Dropdown v-model="selectedCategoty" :options="categories" optionLabel="Name_Category" placeholder="Select a City" class="w-full md:w-14rem" style="z-index: 10008;" /> -->
+                                <Dropdown v-model="currentForm.ID_Category" :options="categories" optionLabel="Name_Category" optionValue="ID_Category" placeholder="Chọn 1 danh mục" class="w-full md:w-14rem">
+                                    <template #value="slotProps">
+                                        <div v-if="selectedCategoryDetail" class="d-flex align-items-around">
+                                            <img  :src="selectedCategoryDetail.Icon.replace('/public','')" style="width: 30px;" />
+                                            <div class="ml-2">{{ selectedCategoryDetail.Name_Category }}</div>
+                                        </div>
+                                        <span v-else>
+                                            {{ slotProps.placeholder }}
+                                        </span>
+                                    </template>
+                                    <template #option="slotProps">
+                                        <div class="d-flex align-items-around">
+                                            <img  :src="slotProps.option.Icon.replace('/public','')" style="width: 30px" />
+                                            <div class="ml-3">{{ slotProps.option.Name_Category }}</div>
+                                        </div>
+                                    </template>
+                                </Dropdown>
+                            </div>
+                                
+                        </div>
+                        <div class="mb-3">
+                            <label for="description_product" class="col-form-label">Mô tả sản phẩm:</label>
+                            <textarea v-model="currentForm.Description" class="form-control" id="description_product" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="size_product" class="col-form-label">Kích thước:</label>
+                            <input v-model="currentForm.Size" type='text' class="form-control" id="size_product"/>
+                        </div>
+                        <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <label class="input-group-text" for="inputGroupSelect01">Chất liệu:</label>
+                                    </div>
+                                    <!-- <Dropdown v-model="selectedMaterial" :options="materials" optionLabel="Name_Material" placeholder="Chọn chất liệu" class="w-full md:w-14rem" style="z-index: 10008;" /> -->
+                                    <MultiSelect v-model="currentForm.ID_Material" display="chip" :options="materials" optionLabel="Name_Material" optionValue="ID_Material" placeholder="Chọn chất liệu"
+                                        :maxSelectedLabels="3" class="w-full md:w-20rem" />
+                                    <div class="container"></div>
+                                    <input id="material_list" type="text" hidden />
+                        </div>
+                        
+                        <div class="mb-3">
+                                    <label class="form-label" for="price_product">Giá:</label>
+                            <input v-model="currentForm.Price" type="number" id="Price" class="form-control" onkeyup="EnterMoney(event)" onclick="EnterMoney(event)" required/>
+                            <p></p>
+                        </div>
+                    
+                        <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <label class="input-group-text" for="inputGroupSelect01">Màu sắc:</label>
+                                    </div>
+                                    <MultiSelect v-model="currentForm.ID_Color" display="chip" :options="colors" optionLabel="Name_Color" optionValue="ID_Color" placeholder="Chọn màu sắc"
+                                        :maxSelectedLabels="3" class="w-full md:w-20rem" />
+                                    <div class="container"></div>
+                                    <input id="color_list" type="text" hidden />
+                        </div>
+                        <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <label class="input-group-text" for="inputGroupSelect01">Nhà cung cấp:</label>
+                                    </div>
+                                    <Dropdown v-model="currentForm.ID_S" :options="suppliers" optionLabel="Name_S" optionValue="ID_S" placeholder="Chọn nhà cung cấp" class="w-full md:w-14rem" style="z-index: 10008;" />
+                        </div>    
+                        <div class="modal-footer">
+                            <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> -->
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button v-if="mode == 'insert'" type="submit" class="btn btn-primary">Insert</button>
+                            <button v-else type="submit" class="btn btn-primary">Update</button>
+                        </div>
                     </div>
                     
-                    <div class="mb-3">
-                                <label class="form-label" for="price_product">Giá:</label>
-                        <input v-model="currentForm.Price" type="number" id="Price" class="form-control" onkeyup="EnterMoney(event)" onclick="EnterMoney(event)" required/>
-                        <p></p>
-                    </div>
-                
-                    <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <label class="input-group-text" for="inputGroupSelect01">Màu sắc:</label>
-                                </div>
-                                <MultiSelect v-model="currentForm.ID_Color" display="chip" :options="colors" optionLabel="Name_Color" optionValue="ID_Color" placeholder="Chọn màu sắc"
-                                    :maxSelectedLabels="3" class="w-full md:w-20rem" />
-                                <div class="container"></div>
-                                <input id="color_list" type="text" hidden />
-                    </div>
-                    <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <label class="input-group-text" for="inputGroupSelect01">Nhà cung cấp:</label>
-                                </div>
-                                <Dropdown v-model="currentForm.ID_S" :options="suppliers" optionLabel="Name_S" optionValue="ID_S" placeholder="Chọn nhà cung cấp" class="w-full md:w-14rem" style="z-index: 10008;" />
-                    </div>    
-                    <div class="modal-footer">
-                        <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> -->
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button v-if="mode == 'insert'" type="submit" class="btn btn-primary">Insert</button>
-                        <button v-else type="submit" class="btn btn-primary">Update</button>
-                    </div>
                 </form>
             </div>
             </div>

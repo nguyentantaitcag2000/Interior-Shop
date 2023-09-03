@@ -23,7 +23,10 @@ class User extends Authenticatable
         'Email',
         'password',
     ];
-
+    public function user_type()
+    {
+        return $this->belongsTo(user_type::class,'ID_UT');
+    }
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -31,6 +34,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'salt',
         'remember_token',
     ];
 

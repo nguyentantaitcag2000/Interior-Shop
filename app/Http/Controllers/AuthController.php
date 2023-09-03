@@ -17,7 +17,7 @@ class AuthController extends Controller
         $mat_khau = $request->input('password');
         
         // Kiểm tra thông tin đăng nhập
-        $khach_hang = User::where('Email', $email)->first();
+        $khach_hang = User::with('user_type')->where('Email', $email)->first();
         if (!$khach_hang) {
             return json_encode([
                 'status' => 401,
@@ -35,6 +35,8 @@ class AuthController extends Controller
 
         // $request->session()->put('email', $email);
         session(['email' => $email]);
+        session(['id_user' => $khach_hang->ID_User]);
+        session(['level' => $khach_hang->user_type->Name_UT]);
 
         return json_encode([
             'status' => 200,

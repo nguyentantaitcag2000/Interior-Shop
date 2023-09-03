@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AdminLTE 3 | Starter</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+    <link rel="icon" type="image/png" href="/images/icon.png">
     <link rel="stylesheet" href="{{asset('css/w3.css')}}">
     <link rel="stylesheet" href="{{asset('css/grid-product.css')}}">
 </head>

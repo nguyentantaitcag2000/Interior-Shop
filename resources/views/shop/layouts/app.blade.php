@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Session;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AdminLTE 3 | Starter</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="icon" type="image/png" href="/images/icon.png">
     
     <link rel="stylesheet" href="{{asset('css/w3.css')}}">
     <link rel="stylesheet" href="{{asset('css/grid-product.css')}}">
@@ -18,9 +19,9 @@ use Illuminate\Support\Facades\Session;
     <div id="app">
         <nav class="navbar navbar-expand-sm w3-animate-top bg-light">
             <div class="container-fluid">
-                <a class="navbar-brand" href="/">
+                <router-link class="navbar-brand" to="/">
                     <img src="/images/icon.png" class="rounded-circle" width="50" height="50">
-                </a>
+                </router-link>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
                 <i class="fa fa-bars" style="font-size:24px;color:black"></i>
                 </button>
@@ -52,10 +53,12 @@ use Illuminate\Support\Facades\Session;
                         <?php }?>
                         
                         <div class="position-relative btn hover">
-                            <span id='count_product_in_cart' style="width:25px;height:25px;top: -10px;right: 4px;" class="position-absolute d-block bg-danger text-light rounded-circle text-center" style="right: 15px;top: -13px;">9</span>
-                            <a href="/Home/Cart">
+                            <span id='count_product_in_cart' style="width:25px;height:25px;top: -10px;right: -12px;" class="position-absolute d-none bg-danger text-light rounded-circle text-center"
+                            >
+                            </span>
+                            <router-link to="/cart">
                                 <img src="/images/shopping-cart.png" class="me-3" style="width:35px;padding: 0;">  
-                            </a>
+                            </router-link>
                         </div>
                         <?php if(session()->has('email')) {?>
                         <div class="btn dropdown">
@@ -63,9 +66,12 @@ use Illuminate\Support\Facades\Session;
                             <?=session('email');?>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                            <li><a class="dropdown-item " href="/auth/logout">Đăng xuất</a></li>
+                                <?php if(session('level') == 'admin') {?>
+                                    <li><a class="dropdown-item " href="/admin/dashboard">Trang quản trị</a></li>
+                                <?php }?>
+                                <li><a class="dropdown-item " href="/auth/logout">Đăng xuất</a></li>
                             </ul>
-                            <img src="./public/images/profile.png" style="width:35px">
+                            <img src="/images/profile.png" style="width:35px">
                         </div>
                     <?php }?>    
                 </div>
@@ -78,7 +84,7 @@ use Illuminate\Support\Facades\Session;
             <router-view></router-view>
         </div>
         
-        <footer class="w3-animate-opacity">
+        <footer class="w3-animate-opacity bg-dark">
         <div class="container">
             <div class="row">
             <div class="col-md-4">
@@ -107,3 +113,14 @@ use Illuminate\Support\Facades\Session;
 </body>
 
 </html>
+
+<script>
+    function handleKeyUp(event) {
+        if (event.keyCode === 13) { // 13 là mã cho phím Enter
+            const inputValue = event.target.value;
+            window.location.href = '/?search=' + encodeURIComponent(inputValue);
+        }
+    }
+</script>
+
+
