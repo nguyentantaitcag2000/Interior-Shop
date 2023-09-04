@@ -32,8 +32,8 @@ export default [
 
     },
     {
-        path: '/admin/order/processing',
-        name: 'admin.order.processing',
+        path: '/admin/bill/:id',
+        name: 'admin.bill',
         component: BillManager,
         meta: { title: 'Đơn đặt hàng' }
     },
@@ -86,7 +86,7 @@ export default [
     }
     ,
     {
-        path: '/checkout/:id?/:amount?',
+        path: '/checkout/:id?/:amount?/:idColor?/:idMaterial?',
         name: 'checkout',
         component: Checkout,
         meta: { title: 'Thanh toán' }

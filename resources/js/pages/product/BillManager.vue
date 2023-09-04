@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import {onMounted, reactive,ref, watch} from 'vue';
 import { order } from '../../interface';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
@@ -8,7 +8,7 @@ import { setCountCard } from '../../main';
 import TabMenu from 'primevue/tabmenu';
 import { cart_tabs } from '../../tabs';
 const order = ref<order[]>();
-const router = useRouter();
+const route = useRoute();
 const totalMoney = ref(0);
 const events = ref([
     { status: 'Ordered', date: '15/10/2020 10:30', icon: 'pi pi-shopping-cart', color: '#9C27B0'},
@@ -16,11 +16,48 @@ const events = ref([
     { status: 'Shipped', date: '15/10/2020 16:15', icon: 'pi pi-shopping-cart', color: '#FF9800' },
     { status: 'Delivered', date: '16/10/2020 10:00', icon: 'pi pi-check', color: '#607D8B' }
 ]);
-onMounted(()=>{
-    axios.get('/api/order/get').then(res=>{
+watch(()=>route.params,()=>{
+    loadBill();
+})
+const ChangeBillStatus = (event:Event, ord:order, id_bs:number) => {
+    let button = event.target as HTMLElement;
+    button.classList.add('disabled');
+    
+    axios.post('/api/bill/update/' + ord.bill.ID_Bill,{'ID_BS': id_bs}).then(res=>{
+        if(res.data.status == 200)
+        {
+            
+            let el = order.value?.filter(item=>item == ord)[0];
+            if(el)
+            {
+                el = el as order;
+                el.bill = res.data.object;
+            }
+            
+        }
+        else
+        {
+            LazyCodet.AlertError(res.data.message);
+        }
+        
+        button.classList.remove('disabled');
+
+    });
+
+
+
+    
+
+}
+const loadBill = () =>{
+    axios.post('/api/order/get',{ID_BS: route.params.id}).then(res=>{
         order.value = res.data;
         console.log(res.data);
     });
+}
+onMounted(()=>{
+
+    loadBill();
 });
 
 </script>
@@ -55,10 +92,10 @@ onMounted(()=>{
                 <td>{{ ord.Address_O }}</td>
                 <td>{{ LazyConvert.ToMoney(ord.bill.TotalMoneyCheckout)  }}</td>
                 <td>
-                        <a href="/Admin/CheckoutDone/<?=$bill['ID_Bill']?>" type="submit" class="btn btn-success">Đã thanh toán</a>    
-                        <a href="/Admin/CheckoutNotDone/<?=$bill['ID_Bill']?>"  type="submit" class="btn btn-light">Chưa thanh toán</a>
-                        <a href="/Admin/CheckoutShiping/<?=$bill['ID_Bill']?>"  type="submit" class="btn btn-primary">Đang vận chuyển</a>
-                        <a href="/Admin/Destroy/<?=$bill['ID_Bill']?>"  type="submit" class="btn btn-danger">Hủy đơn</a>
+                        <a @click="ChangeBillStatus($event,ord,2)" class="btn btn-success">Đã thanh toán</a>    
+                        <a @click="ChangeBillStatus($event,ord,1)" class="btn btn-light">Chưa thanh toán</a>
+                        <a @click="ChangeBillStatus($event,ord,3)" class="btn btn-primary">Đang vận chuyển</a>
+                        <a @click="ChangeBillStatus($event,ord,4)" class="btn btn-danger">Hủy đơn</a>
 
                     
                 </td>
@@ -68,11 +105,12 @@ onMounted(()=>{
             
             </tbody>
             </table>
-            <a href="/Admin/Bill/1" class="btn btn-link">Xem các đơn chưa thanh toán</a>
-            <a href="/Admin/Bill/2" class="btn btn-link">Xem các đơn đã thanh toán</a>
-            <a href="/Admin/Bill/3" class="btn btn-link">Xem các đơn đang vận chuyển</a>
-            <a href="/Admin/Bill/3" class="btn btn-link">Xem các đơn đã hủy</a>
-            <a href="/Admin/Bill"   class="btn btn-link">Tất cả</a>
+ 
+            <router-link to="/admin/bill/1"   class="btn btn-link">Xem các đơn chưa thanh toán</router-link>
+            <router-link to="/admin/bill/2"   class="btn btn-link">Xem các đơn đã thanh toán</router-link>
+            <router-link to="/admin/bill/3"   class="btn btn-link">Xem các đơn đang vận chuyển</router-link>
+            <router-link to="/admin/bill/4"   class="btn btn-link">Xem các đơn đã hủy</router-link>
+            <router-link to="/admin/bill/0"   class="btn btn-link">Tất cả</router-link>
         </div>
     </div>
 </template>

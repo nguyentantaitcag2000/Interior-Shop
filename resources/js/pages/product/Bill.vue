@@ -60,6 +60,8 @@ onMounted(()=>{
             <thead class="thead-dark">
                 <tr>
                     <th scope="col">Tên sản phẩm</th>
+                    <th scope="col">Chất liệu</th>
+                    <th scope="col">Màu sắc</th>
                     <th scope="col">Số lượng</th>
                     <th scope="col">Tổng tiền</th>
                 </tr>
@@ -69,6 +71,8 @@ onMounted(()=>{
                 <tr v-for="ca in bill?.order.order_detail">
                     <template  v-for="ca_de in ca.shopping_cart.cart_detail">
                         <th scope="row">{{ ca_de.product.Name_Product}}</th>
+                        <td>{{ ca_de.material != null ?  ca_de.material.Name_Material : '' }}</td>
+                        <td>{{ ca_de.color != null ? ca_de.color.Name_Color : '' }}</td>
                         <td>{{ ca_de.Amount_CD }}</td>
                         <td>{{ LazyConvert.ToMoney(ca_de.product.Price) }}</td>
                     </template >

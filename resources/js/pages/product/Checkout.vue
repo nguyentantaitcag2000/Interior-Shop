@@ -4,9 +4,9 @@ import {onMounted, reactive,ref, watch} from 'vue';
 import { shoppingCart,methodOfPayment,shipMethod, product } from '../../interface';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
-import { useRoute } from 'vue-router';
+import { routerKey, useRoute,useRouter } from 'vue-router';
 const route = useRoute();
-
+const router = useRouter();
 interface FormState{
     fullName:string,
     address:string,
@@ -18,6 +18,10 @@ interface FormState{
     isShow:boolean,
     amountBuyNow: number | null,
     idProductBuyNow: number | null,
+    idColorBuyNow: number | null,
+    idMaterialBuyNow: number | null,
+    nameColor?: string|null,
+    nameMaterial?: string|null
 }
 const form = reactive<FormState>({
     address:'',
@@ -30,6 +34,8 @@ const form = reactive<FormState>({
     isShow:false,
     amountBuyNow: null,
     idProductBuyNow:null,
+    idColorBuyNow:null,
+    idMaterialBuyNow:null,
 });
 const methodOfPaymentList = ref<methodOfPayment[]>();
 const shipMethodList = ref<shipMethod[]>();
@@ -54,7 +60,7 @@ const SubmitForm = (event:Event)=>{
                     checkoutFinished.value = true;
                 }
                 else{
-                    LazyCodet.AlertSuccess(res.data.message);
+                    LazyCodet.AlertError(res.data.message);
                 }
             });        
         },
@@ -62,7 +68,7 @@ const SubmitForm = (event:Event)=>{
     
 }
 const isBuyNow = ()=>{
-    return route.params.id != '';
+    return route.params.id != '' && route.params.amount != '' && route.params.idColor != '' && route.params.idMaterial != '';
 }
 const calcMoney = ()=>{
     let total:number = 0;
@@ -70,6 +76,9 @@ const calcMoney = ()=>{
     {
         form.amountBuyNow = Number(route.params.amount); 
         form.idProductBuyNow = Number(route.params.id); 
+        form.idColorBuyNow = Number(route.params.idColor); 
+        form.idMaterialBuyNow = Number(route.params.idMaterial); 
+
         if (product.value && product.value.Price)
             total = Number(route.params.amount)  * product.value.Price;
     }
@@ -89,12 +98,24 @@ onMounted(()=>{
     {
         axios.get('/api/product/' + route.params.id).then(res=>{
             product.value = res.data;
+            if(product.value?.detail_product_color)
+            {
+                console.log(product.value.detail_product_material);
+                if(product.value.detail_product_color.length > 0)
+                    form.nameColor = product.value.detail_product_color.filter(dpc => dpc.ID_Color == Number(route.params.idColor))[0].color.Name_Color
+                if(product.value.detail_product_material.length > 0)
+                    form.nameMaterial = product.value.detail_product_material.filter(dpc => dpc.ID_Material == Number(route.params.idMaterial))[0].material.Name_Material
+            }
             calcMoney();
         });
     }
     else{
         axios.get('/api/shoppingcart').then(res=>{
             carts.value = res.data.object;
+            if(typeof carts.value == 'undefined')
+            {
+                router.back();
+            }
             calcMoney();
 
             carts.value?.forEach(val=>{
@@ -117,7 +138,7 @@ onMounted(()=>{
     <div v-if="checkoutFinished" class="d-flex flex-column" style="height: 100vh;">
         <h4 class="text-center">Cảm ơn bạn đã đặt hàng, chúng tôi sẽ nhanh chóng giao tới cho bạn !</h4>
         <router-link to="/" class="btn btn-success ml-auto mr-auto" style="width: 200px;">Tiếp tục mua sắm</router-link>
-        <img class="mt-3 ml-auto mr-auto" src="checkout-success.png" width="400" alt="">
+        <img class="mt-3 ml-auto mr-auto" src="/checkout-success.png" width="400" alt="">
     </div>
     <form v-else @submit="SubmitForm" method="POST" class="p-3 rounded" style="margin-bottom: 100px;">
         <div class="row">
@@ -173,6 +194,8 @@ onMounted(()=>{
                         <thead class="thead-dark">
                             <tr>
                                 <th scope="col">Tên sản phẩm</th>
+                                <th scope="col">Màu sắc</th>
+                                <th scope="col">Chất liệu</th>
                                 <th scope="col">Số lượng</th>
                                 <th scope="col">Tổng tiền</th>
                             </tr>
@@ -181,11 +204,15 @@ onMounted(()=>{
                         <tbody>
                             <tr v-if="isBuyNow()">
                                 <th scope="row">{{ product?.Name_Product }}</th>
+                                <td>{{ form.nameColor }}</td>
+                                <td>{{ form.nameMaterial }}</td>
                                 <td>{{ route.params.amount }}</td>
                                 <td>{{ LazyConvert.ToMoney(product?.Price) }}</td>
                             </tr>
                             <tr v-else v-for="ca in carts">
                                 <th scope="row">{{ ca.cart_detail[0].product.Name_Product }}</th>
+                                <td>{{ ca.cart_detail[0].color != null ? ca.cart_detail[0].color.Name_Color : '' }}</td>
+                                <td>{{ ca.cart_detail[0].material != null ? ca.cart_detail[0].material.Name_Material : '' }}</td>
                                 <td>{{ ca.cart_detail[0].Amount_CD }}</td>
                                 <td>{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price) }}</td>
                             </tr>

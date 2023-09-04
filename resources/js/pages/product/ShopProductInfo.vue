@@ -11,17 +11,21 @@ img {
 }
 </style>
 <script setup lang="ts">
-import {onMounted, ref,reactive,computed} from 'vue';
+import {onMounted, ref,reactive,computed,watch} from 'vue';
 import { useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { product } from '../../interface';
 import axios, { formToJSON } from 'axios';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
 import Galleria from 'primevue/Galleria';
+import SelectButton from 'primevue/selectbutton';
 import Image from 'primevue/image';
 import Rating from 'primevue/rating';
 const route = useRoute();
+const router = useRouter();
 const myProduct = ref<product>();
+const myProductRelative = ref<product[]>();
 const activeIndex = ref(1);
 const rating = ref(0);
 interface MyImage {
@@ -32,7 +36,9 @@ interface MyImage {
 
 const images = ref<MyImage[]>([]);
 interface FormState{
-    ID_Product: string,
+    ID_Product: number,
+    ID_Color: number|null,
+    ID_Material: number|null,
     Amount: number
 }
 const responsiveOptions = ref([
@@ -49,13 +55,22 @@ const responsiveOptions = ref([
         numVisible: 1
     }
 ]);
+watch(()=> route.params, ()=>{
+    images.value = [];
+    window.scrollTo(0,0);
+    form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
+    loadProduct();
+});
 const visibleCount = computed(() => {
     return images.value.length > 3 ? 3 : images.value.length;
 });
-const form = reactive<FormState>({
-    ID_Product: route.params.id as string,
-    Amount: 1
-})
+const initForm = {
+    ID_Product: -1,
+    Amount: 1,
+    ID_Color: null,
+    ID_Material: null
+}
+let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)))
 const changeAmount = (event:Event) => {
     let button = event.target as HTMLElement;
 
@@ -64,8 +79,23 @@ const changeAmount = (event:Event) => {
     else
         form.Amount++;
 }
-
+const checkChooseColor = ()=>{
+    if(isNotHaveColor() == false && form.ID_Color == null)
+    {
+        LazyCodet.AlertError("Vui lòng chọn màu sắc của sản phẩm !");
+        throw '';
+    }
+}
+const checkChooseMaterial = ()=>{
+    if(isNotHaveMaterial() == false && form.ID_Material == null)
+    {
+        LazyCodet.AlertError("Vui lòng chọn chất liệu của sản phẩm !");
+        throw '';
+    }
+}
 const AddCart = ()=>{
+    checkChooseColor();
+    checkChooseMaterial();
     LazyCodet.AlertProcessing({
         requireConfirm: false,
         workerFunction() {
@@ -84,7 +114,23 @@ const AddCart = ()=>{
     });
     
 }
-onMounted(()=>{
+const BuyNow = () => {
+    checkChooseColor();
+    checkChooseMaterial();
+    router.push('/checkout/' + myProduct.value?.ID_Product + '/' + form.Amount + '/' +  form.ID_Color + '/' +  form.ID_Material );
+}
+const isNotHaveColor = ()=>{
+    if(myProduct.value?.detail_product_color.length == 0)
+        return true;
+    return myProduct.value?.detail_product_color.length == 1 && myProduct.value?.detail_product_color[0].ID_Color == 0;
+}
+const isNotHaveMaterial = ()=>{
+    if(myProduct.value?.detail_product_material.length == 0)
+        return true;
+    return myProduct.value?.detail_product_material.length == 1 && myProduct.value?.detail_product_material[0].ID_Material == 0;
+}
+const loadProduct = () => {
+    form.ID_Product = Number(route.params.id);
     axios.get('/api/product/' + route.params.id).then(res => {
         myProduct.value = res.data;
 
@@ -107,7 +153,14 @@ onMounted(()=>{
                 }
             });
         }
+        axios.get(`/api/products/category/${myProduct.value?.category.Name_Category}` ).then(res=>{
+            myProductRelative.value = res.data;
+        });
     });
+}
+onMounted(()=>{
+    
+    loadProduct();
     axios.post('/api/shoppingcart/get_carts_not_checkout').then(res => {
         let array = res.data;
         if(array.length > 0 )
@@ -147,11 +200,26 @@ onMounted(()=>{
                     <input value="<?=$data['Product']['ID_Product']?>" id="product_id" hidden>
                     <h1>{{ myProduct?.Name_Product }}</h1>
                     <p class="text-danger h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price) }}</strong></p>
+                    <hr>
                     <div>
-                        <span class="d-block mt-1"><b>Màu sắc:</b> {{ myProduct?.detail_product_color.map(item => item.color.Name_Color).join(', ') }}</span><br>
-                        <span class="d-block mt-1"><b>Kích thước:</b> {{ myProduct?.Size }}</span><br>
-                        <span class="d-block mt-1"><b>Chất liệu:</b> {{ myProduct?.detail_product_material.map(item=> item.material.Name_Material).join(', ') }}</span><br>
-                        <div class="row g-3 align-items-center mt-1">
+                        <div>
+                            <span><b>Màu sắc:</b></span>
+                            <span v-if="isNotHaveColor()">
+                                {{ ' Không xác định' }}
+                            </span>
+                            <SelectButton v-else v-model="form.ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  />
+                        </div>
+                        
+                        <div class="mt-4">
+                            <span><b>Chất liệu:</b></span>
+                            <span v-if="isNotHaveMaterial()">
+                                {{ ' Không xác định' }}
+                            </span>
+                            <SelectButton v-else v-model="form.ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />
+                        </div>
+                        <span class="d-block mt-4"><b>Kích thước:</b> {{ myProduct?.Size }}</span><br>
+
+                        <div class="row g-3 align-items-center mt-4">
                             <div class="col-auto">
                                 <label for="inputPassword6" class="col-form-label">Số lượng</label>
                             </div>
@@ -172,7 +240,7 @@ onMounted(()=>{
                         <div class="row mt-3">
                             <button class="btn btn-primary" @click="AddCart"><i class="fas fa-shopping-cart mr-2" ></i>Đặt vào giỏ hàng</button>
                         
-                            <router-link :to="'/checkout/' + myProduct?.ID_Product + '/' + form.Amount " class="btn btn-success ml-3" value="Mua ngay" type="submit" >Mua ngay</router-link>
+                            <button @click="BuyNow" class="btn btn-success ml-3" value="Mua ngay" type="submit" >Mua ngay</button>
                             
                         </div>
                         <div class="row mt-3">
@@ -235,38 +303,40 @@ onMounted(()=>{
                 </Rating>
             </div>
         </div>
-        <div class="container bg-light rounded pt-2 mt-3">
+        <div class="bg-light rounded pt-2 mt-3">
             <div class="row">
                 <h3 class="h3 w3-animate-opacity">Các sản phẩm có liên quan</h3>    
             </div>
             <div class="row w-100">
-                <!-- <?php foreach ($data['Product_Suggestion'] as $key => $value) { 
-                    $title = $value['Name_Product'];
-                    if (strlen($value['Name_Product']) > 34) {
-                    $title = mb_substr($value['Name_Product'], 0, 34) . "...";
-                    }
-                    ?>
-                <div class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
-                        <div class="product-grid2">
-                            <div class="product-image2">
-                                <a href="/Home/Info/<?=$value['ID_Product']?>">
-                                    <img class="pic-1" src="<?= $value['Avatar']?>">
-                                </a>
-                                <ul class="social">
-                                    <li><a href="#" data-tip="Quick View"><i class="fa fa-eye"></i></a></li>
-                                    <li><a href="#" data-tip="Add to Cart"><i class="fa fa-shopping-cart"></i></a></li>
-                                </ul>
-                                <a class="add-to-cart" href="">Add to cart</a>
-                            </div>
-                            <div class="product-content">
-                                <h3 class="title"><a href="#"><?=$title?></a></h3>
-                                <span class="price"><?=number_format($value['Price'],0) . ' đ'?></span>
-                            </div>
-                        </div>
-                    </div> 
-                <?php }?> -->
-                
+                <!-- <div v-for="pr in products" class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
+                    <div class="product-grid2">
+                        <div class="product-image2">
+                            <router-link :to="'/product/' + pr.ID_Product" >
+                                <img class="pic-1" :src="pr.Avatar">
+                            </router-link>
 
+                        </div>
+                        <div class="product-content">
+                            <h3 class="title"><a href="#">{{ pr.Name_Product }}</a></h3>
+                            <span class="price">{{ LazyConvert.ToMoney(pr.Price) }}</span>
+                        </div>
+                    </div>
+                </div> -->
+
+                <div v-for="detail in myProductRelative" class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
+                    <div class="product-grid2">
+                        <div class="product-image2">
+                            <router-link :to="'/product/' + detail.ID_Product">
+                                <img class="pic-1" :src="detail.Avatar">
+                            </router-link>
+                        </div>
+                        <div class="product-content">
+                            <h3 class="title"><router-link :to="'/product/' + detail.ID_Product">{{ detail.Name_Product }}</router-link></h3>
+                            <span class="price">{{ LazyConvert.ToMoney(detail.Price) }}</span>
+                        </div>
+                    </div>
+                    
+                </div>
             </div>
         </div>
     </div>

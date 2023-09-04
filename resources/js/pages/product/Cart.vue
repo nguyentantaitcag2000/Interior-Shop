@@ -10,16 +10,21 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import {onMounted, reactive,ref, watch} from 'vue';
+import {onMounted, reactive,ref, watch,computed} from 'vue';
 import { shoppingCart } from '../../interface';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
 import TabMenu from 'primevue/tabmenu';
 import { cart_tabs } from '../../tabs';
 import InputNumber from 'primevue/inputnumber';
-const carts = ref<shoppingCart[]>();
+import Dropdown from "primevue/dropdown";
+interface shoppingCartCustom extends shoppingCart{
+    ID_Color:number
+}
+const carts = ref<shoppingCartCustom[]>();
 const router = useRouter();
 const totalMoney = ref(0);
+const colors = ref([]);
 const calcMoney = ()=>{
     let total = 0;
     carts.value?.forEach(function(val){
@@ -27,6 +32,8 @@ const calcMoney = ()=>{
     });
     totalMoney.value = total;
 }
+const selectedColor = computed(()=>{
+});
 const checkout = () => {
     //Lưu lại các thông tin như số lượng tăng giảm số lượng 
     LazyCodet.AlertProcessing({
@@ -47,7 +54,7 @@ const checkout = () => {
         }
     });
 }
-const removeCart = (event:Event,cart:shoppingCart)=>{
+const removeCart = (event:Event,cart:shoppingCartCustom)=>{
     event.preventDefault();
     LazyCodet.AlertProcessing({
         alertMessage: "Bạn có chắc chắn muốn xóa ?",
@@ -72,13 +79,37 @@ const removeCart = (event:Event,cart:shoppingCart)=>{
     });
     
 }
+const isHaveColor  = (ca:shoppingCartCustom) => {
+    if(ca.cart_detail[0].product.detail_product_color.length > 0)
+    {
+        if(ca.cart_detail[0].product.detail_product_color.length == 1)
+        {
+            if(ca.cart_detail[0].product.detail_product_color[0].ID_Color == 0)
+                return false;
+            return true;
+        }
+        return true;
+    }
+    return false;
+}
 watch(()=>carts, (oldVal, newVal) => {
     calcMoney();
 }, { deep: true });
 onMounted(()=>{
     axios.get('/api/shoppingcart').then(res=>{
-        carts.value = res.data.object;
+        let result:shoppingCartCustom[]  = res.data.object;
+        //Đem cái ID_Color ra ngoài cùng cấp với các thuộc tính của result
+        let myarray = result.map(cart=>{
+            return {
+                ...cart,
+                ID_Color: cart.cart_detail[0].ID_Color
+            }
+        }) as any;
+        carts.value = myarray;
         calcMoney();
+    });
+    axios.get('/api/colors').then((res)=>{
+        colors.value = res.data;
     });
 });
 
@@ -103,10 +134,14 @@ onMounted(()=>{
                     <div class="col-sm-4 d-flex align-items-center ">
                         <h5>{{ ca.cart_detail[0].product.Name_Product }}</h5>
                     </div>
+                    <div v-if="isHaveColor(ca)" class="col-sm-2 d-flex align-items-center ">
+                        <Dropdown v-model="ca.ID_Color" :options="ca.cart_detail[0].product.detail_product_color" optionValue="color.ID_Color" optionLabel="color.Name_Color" placeholder="Select a Color" class="w-full md:w-14rem" />
+                    </div>
+                    <div v-else class="col-sm-2 d-flex align-items-center "></div>
                     <div class="col-sm-2 d-flex align-items-center ">
                         <span class="origin">{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price) }}</span>
                     </div>
-                    <div class="col-sm-2 d-flex align-items-center pb-4">
+                    <div class="col-sm-1 d-flex align-items-center pb-4">
                         <div style="width:50%">
                             
                             <InputNumber v-model="ca.cart_detail[0].Amount_CD"  :min="1" showButtons buttonLayout="vertical" style="width: 3rem;"

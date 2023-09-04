@@ -17,7 +17,7 @@ const events = ref([
     { status: 'Delivered', date: '16/10/2020 10:00', icon: 'pi pi-check', color: '#607D8B' }
 ]);
 onMounted(()=>{
-    axios.get('/api/order/get').then(res=>{
+    axios.post('/api/order/get',{ID_BS:1}).then(res=>{
         order.value = res.data;
         console.log(res.data);
     });

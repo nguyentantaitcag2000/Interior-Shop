@@ -38,10 +38,11 @@ Route::group(['middleware' => ['web']], function () {
     Route::delete('/shoppingcart/remove/{shoppingCart}', [ShoppingCartController::class, 'destroy']);
     Route::post('/shoppingcart/updates', [ShoppingCartController::class, 'updates']);
     Route::post('/order', [OrderController::class, 'store']);
-    Route::get('/order/get', [OrderController::class, 'show']);
+    Route::post('/order/get', [OrderController::class, 'show']);
     Route::get('/bill/processing', [BillController::class, 'processing']);
 
     Route::get('/bill/{bill}', [BillController::class, 'show']);
+    Route::post('/bill/update/{bill}', [BillController::class, 'update']);
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/products/inventory', [ProductController::class, 'inventory']);
 

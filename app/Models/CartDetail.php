@@ -14,7 +14,10 @@ class CartDetail extends Model
     protected $fillable = [
         'ID_SC',
         'ID_Product',
-        'Amount_CD'
+        'Amount_CD',
+        'ID_Color',
+        'ID_Material'
+
     ];
     public function product()
     {
@@ -23,5 +26,13 @@ class CartDetail extends Model
     public function shoppingcart()
     {
         return $this->belongsTo(ShoppingCard::class,'ID_SC');
+    }
+    public function color()
+    {
+        return $this->belongsTo(Color::class,'ID_Color');
+    }
+    public function material()
+    {
+        return $this->belongsTo(Material::class,'ID_Material');
     }
 }

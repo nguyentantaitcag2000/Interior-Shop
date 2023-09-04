@@ -95,7 +95,7 @@ onMounted(()=>{
                             
                             <div class="d-flex">
                                 <p>Đơn hàng cần xử lý</p>
-                                <router-link to="/admin/order/processing" class="btn btn-dark ml-3">Xem</router-link>
+                                <router-link to="/admin/order/1" class="btn btn-dark ml-3">Xem</router-link>
                             </div>
                         </div>
                         <div class="icon">

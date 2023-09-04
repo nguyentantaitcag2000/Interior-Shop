@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\bill;
+use App\Repositories\Auth\AuthRepositoryInterface;
 use Illuminate\Http\Request;
 
 class BillController extends Controller
 {
+    public $authRepository;
+    public function __construct(AuthRepositoryInterface $authRepository) {
+        $this->authRepository = $authRepository;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -35,7 +40,10 @@ class BillController extends Controller
      */
     public function show(bill $bill)
     {
-        $data = $bill->load(['order.orderDetail.shoppingCart.cart_detail.product','order.methodofpayment']);
+        $data = $bill->load(['order.orderDetail.shoppingCart.cart_detail.product',
+        'order.orderDetail.shoppingCart.cart_detail.color',
+        'order.orderDetail.shoppingCart.cart_detail.material',
+        'order.methodofpayment']);
         return $data;
     }
 
@@ -52,7 +60,14 @@ class BillController extends Controller
      */
     public function update(Request $request, bill $bill)
     {
-        //
+        $this->authRepository->CheckLogin();
+        $bill->ID_BS = $request->input('ID_BS');
+        $bill->save();
+        return json_encode([
+            'status' => 200,
+            'message' => 'Success',
+            'object' => $bill->load('bill_status')
+        ]);
     }
 
     /**

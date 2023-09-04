@@ -58,7 +58,9 @@ class OrderController extends Controller
 
             $amount = $request->input('amountBuyNow');
             $id_product = $request->input('idProductBuyNow');
-            $result = $this->shoppingCartRepository->store($id_user,$amount,$id_product);
+            $id_color = $request->input('idColorBuyNow');
+            $id_material = $request->input('idMaterialBuyNow');
+            $result = $this->shoppingCartRepository->store($id_user,$amount,$id_product,$id_color,$id_material);
             $ID_SC = $result['ID_SC'];
             $array_insert_data_order_detail[] = [
                 'ID_SC' => $ID_SC,
@@ -70,11 +72,11 @@ class OrderController extends Controller
 
         }
         else
-        {
+            {
             foreach ($request->input('ID_SC_List') as $key => $ID_SC) {
                 $array_insert_data_order_detail[] = [
                     'ID_SC' => $ID_SC,
-                    'ID_Order' => $order->ID_Order
+                    'ID_Order' => $order->ID_Order,
                 ];
                 //Chuyển trạng thái các giỏ hàng thành đã thanh toán
                 ShoppingCart::where('ID_SC',$ID_SC)->update(['ID_CS' => 3]);
@@ -110,16 +112,20 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(order $order)
+    public function show(Request $request,order $order)
     {
         $this->authReponsitory->CheckLogin();
         $userId = session('id_user');
-
+        
         $data = Order::with(['orderDetail.shoppingCart' => function($query) use ($userId) {
             $query->where('ID_User', $userId);
         },'orderDetail.shoppingCart.cart_detail.product','bill.bill_status'])
         ->whereHas('orderDetail.shoppingCart', function($query) use ($userId) {
             $query->where('ID_User', $userId);
+        })
+        ->whereHas('bill.bill_status', function($query) use ($request) {
+            if($request->input('ID_BS') != 0)
+                $query->where('ID_BS', $request->input('ID_BS'));
         })
         ->orderBy('ID_Order','DESC')
         ->get();

@@ -13,15 +13,18 @@ use function PHPSTORM_META\map;
 class ShoppingCartRepository extends Repository implements ShoppingCartRepositoryInterface{
     public function getWith($id_status, $id_user)
     {
-        $data = ShoppingCart::with(['cart_detail','cart_detail.product'])
+        $data = ShoppingCart::with(['cart_detail.color','cart_detail.product.detailProductColor' => function($query) {
+            $query->distinct()->with('color');
+        },
+        'cart_detail.material'])
         ->where('ID_User',$id_user)
         ->where('ID_CS',$id_status)
                 ->get();
         return $data;
     }
-    public function store($id_user, $amount, $id_product)
+    public function store($id_user, $amount, $id_product,$id_color,$id_material)
     {
-        return DB::transaction(function() use($id_user, $amount, $id_product){
+        return DB::transaction(function() use($id_user, $amount, $id_product,$id_color,$id_material){
             if($amount > 0)
             {
                 $SC = ShoppingCart::create([
@@ -32,6 +35,9 @@ class ShoppingCartRepository extends Repository implements ShoppingCartRepositor
                     'ID_SC' => $SC->ID_SC,
                     'ID_Product' => $id_product,
                     'Amount_CD' => $amount,
+                    'ID_Color' => $id_color,
+                    'ID_Material' => $id_material
+
                 ]);
             }
             return [
