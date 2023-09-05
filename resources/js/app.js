@@ -7,7 +7,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Routes from './routes.js';
 import PrimeVue from 'primevue/config';
 import bsCustomFileInput from 'bs-custom-file-input'
-
+import ToastService from 'primevue/toastservice';
 
 const app = createApp({});
 const router = createRouter({
@@ -21,6 +21,6 @@ router.afterEach((to) => {
 bsCustomFileInput.init();
 app.use(router);
 app.use(PrimeVue);
-
+app.use(ToastService);
 
 app.mount('#app');

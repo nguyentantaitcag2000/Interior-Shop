@@ -48,6 +48,7 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/InsertProduct', [ProductController::class, 'store']);
 });
 //POST
+Route::get('/filter/{id}', [ProductController::class,'filter']);
 Route::get('/ship-method', [ShipMethodController::class, 'index']);
 Route::get('/method-of-payment', [MethodOfPaymentController::class, 'index']);
 Route::post('/signup', [UserController::class, 'store']);

@@ -17,9 +17,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 use function PHPSTORM_META\map;
-
+enum FILTER: int {
+    case High2Low = 0;
+    case Low2High = 1;
+}
 class ProductController extends Controller
 {
+    
     private $authRepository;
     public function __construct(AuthRepositoryInterface $authRepository) {
         $this->authRepository = $authRepository;
@@ -154,7 +158,29 @@ class ProductController extends Controller
     {
         //
     }
-
+    public function filter(int $id)
+    {
+        
+        $query = Product::select()
+                ->with(['category','dimensions','detailProductImage','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
+                ,'detailProductMaterial.material',
+                'detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
+                ,'detailProductColor.color']);
+        if( FILTER::High2Low->value == $id)
+        {
+            $query = $query->orderByDesc('product.Price');
+        }
+        else if(FILTER::Low2High->value == $id)
+        {
+            $query = $query->orderBy('product.Price','asc');
+        }
+        $products = $query->get();
+        return json_encode([
+            'status' => 200,
+            'message' => 'success',
+            'object' => $products
+        ]);
+    }
     /**
      * Update the specified resource in storage.
      */

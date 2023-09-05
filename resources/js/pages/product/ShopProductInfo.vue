@@ -23,6 +23,7 @@ import SelectButton from 'primevue/selectbutton';
 import Image from 'primevue/image';
 import Rating from 'primevue/rating';
 import Breadcrumb from 'primevue/breadcrumb';
+
 const route = useRoute();
 const router = useRouter();
 const myProduct = ref<product>();
