@@ -60,7 +60,9 @@ class OrderController extends Controller
             $id_product = $request->input('idProductBuyNow');
             $id_color = $request->input('idColorBuyNow');
             $id_material = $request->input('idMaterialBuyNow');
-            $result = $this->shoppingCartRepository->store($id_user,$amount,$id_product,$id_color,$id_material);
+            $id_dimensions = request('idDimensionsBuyNow');
+
+            $result = $this->shoppingCartRepository->store($id_user,$amount,$id_product,$id_color,$id_material,$id_dimensions);
             $ID_SC = $result['ID_SC'];
             $array_insert_data_order_detail[] = [
                 'ID_SC' => $ID_SC,

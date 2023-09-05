@@ -7,10 +7,13 @@ import Button from 'primevue/button';
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
 import MultiSelect from "primevue/multiselect";
+import SelectButton from 'primevue/selectbutton';
+import InputMask from 'primevue/inputmask';
 import $ from 'jquery';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import {material,color,category,detailProductColor,detailProductMaterial,detailProductImage,
-    importHistoryDetail} from '../../interface';
+    importHistoryDetail,
+product} from '../../interface';
 
 interface FormState{
     'ID_Product': number ,
@@ -23,16 +26,18 @@ interface FormState{
     'Price': number ,
     'Avatar': string,
     'DetailImage': string[],
-    'Size': string,
+    'Dimensions': string[],
     'material': material ,
     'color': color ,
     'category': category ,
     'detail_product_material': detailProductMaterial[] ,
     'detail_product_color': detailProductColor[] ,
     'detail_product_image': detailProductImage[] ,
-    import_history_detail: importHistoryDetail 
+    import_history_detail: importHistoryDetail
 }
-
+const selectedDimensionsImport = ref();
+const selectedMaterialImport = ref();
+const selectedColorImport = ref();
 const products = ref<FormState[]>();
 const categories = ref<category[]>();
 const materials = ref([]);
@@ -52,7 +57,7 @@ const initialFormState:FormState = {
     'Price': 1,
     'Avatar': '',
     'DetailImage': [],
-    'Size': '',
+    'Dimensions': [],
     'material': {
         ID_Material: -1,
         Name_Material: ''
@@ -86,6 +91,8 @@ const getUsers = () => {
     axios.get('/api/products/_/_').then((res)=>{
         products.value = res.data;
         loading.value = false;
+      
+        
     });
     
     axios.get('/api/categories').then((res)=>{
@@ -100,6 +107,12 @@ const getUsers = () => {
     axios.get('/api/suppliers').then((res)=>{
         suppliers.value = res.data;
     });
+}
+const InsertDimensions = () => {
+    currentForm.value.Dimensions.push('');
+}
+const RemoveDimentions = (index:number) => {
+    currentForm.value.Dimensions.splice(index,1);
 }
 const getMaterials_String = (material_obj:FormState[])=>{
     var arr = material_obj.map(
@@ -141,7 +154,12 @@ const selectedCategoryDetail = computed(() => {
     if(categories.value !=undefined)
     return categories.value.find(category => category.ID_Category === currentForm.value.ID_Category);
 })
-
+const getColorObject = computed(()=>{
+    return colors.value.filter((item:any)=> currentForm.value.ID_Color.includes(item.ID_Color));
+})
+const getMaterialObject = computed(()=>{
+    return materials.value.filter((item:any)=> currentForm.value.ID_Material.includes(item.ID_Material));
+})
 const SubmitForm = (event:any) => {
     event.preventDefault();
     LazyCodet.AlertProcessing({
@@ -198,7 +216,19 @@ const updateProduct = (productData:FormState) => {
         {
             (form_update as any)[key] = productData[key as keyof FormState];
         }
+       
+        
+     
     });
+    form_update.Dimensions = [];
+    let myProduct = (productData as any);
+        myProduct.dimensions.forEach((di:any) => {
+            if(products.value)
+            {
+                form_update.Dimensions.push(di.Name_D);    
+            }
+            
+        });
     if(productData.detail_product_material)
         form_update.ID_Material = productData.detail_product_material.map(item => {
             return item.material.ID_Material;
@@ -221,6 +251,27 @@ const importProduct = (productData:FormState) => {
             (form_import as any)[key] = productData[key as keyof FormState];
         }
     });
+    form_import.Dimensions = [];
+    let myProduct = (productData as any);
+        myProduct.dimensions.forEach((di:any) => {
+            if(products.value)
+            {
+                form_import.Dimensions.push(di.Name_D);    
+            }
+            
+        });
+    if(productData.detail_product_material)
+        form_import.ID_Material = productData.detail_product_material.map(item => {
+            return item.material.ID_Material;
+        });
+    if(productData.detail_product_color)
+        form_import.ID_Color = productData.detail_product_color.map(item => {
+            return item.color.ID_Color;
+        });
+    if(productData.detail_product_image)
+        form_import.DetailImage = productData.detail_product_image.map(item => {
+            return item.Image;
+        });
 }
 const deleteProduct = (ID_Product:number) => {
     LazyCodet.AlertProcessing({
@@ -315,50 +366,6 @@ onMounted(()=>{
 });
 
 </script>
-<!-- 
-<script>
-import axios from 'axios';
-import $ from 'jquery';
-import DataTable from "datatables.net";
-
-export default {
-  data() {
-    return {
-      products: []
-    };
-  },
-
-  methods: {
-    getUsers() {
-      axios.get('/api/products').then((res) => {
-        this.products = res.data;
-      });
-    },
-    formatCash(amount) {
-      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-    },
-    setupDataTable() {
-      $('#table').DataTable({
-        "columnDefs": [
-          { "orderDataType": "data-sort", "targets": [1] }
-        ]
-      });
-    }
-  },
-  mounted() {
-    this.getUsers();
-    const self = this;
-    this.$nextTick(() => {
-        
-      // Sử dụng nextTick để đảm bảo DOM đã được cập nhật hoàn toàn giông document on ready của jquery
-      setTimeout(function(){
-        self.setupDataTable();  
-      },1000);
-      
-    });
-  }
-}
-</script> -->
 <style>
 .p-dropdown-panel,.p-multiselect-panel{
     z-index: 10008 !important;
@@ -409,6 +416,7 @@ img {
                 
             </template>
         </Column>
+        
         <Column field="Name_Product" header="Tên sản phẩm"></Column>
         <Column header="Màu sắc">
             <template #body="slotProps">
@@ -470,6 +478,18 @@ img {
                     </div>
                     <div v-if="mode=='import'">
                         <div class="mb-3">
+                            <label for="size_product" class="col-form-label">Kích thước:</label>
+                            <SelectButton v-model="selectedDimensionsImport" class="mt-3" :options="currentForm.Dimensions" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="size_product" class="col-form-label">Màu sắc:</label>
+                            <SelectButton v-model="selectedColorImport" class="mt-3" :options="getColorObject" option-label="Name_Color" option-value="ID_Color" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="size_product" class="col-form-label">Màu sắc:</label>
+                            <SelectButton v-model="selectedMaterialImport" class="mt-3" :options="getMaterialObject" option-label="Name_Material" option-value="ID_Material"  />
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label" for="price_product">Số lượng:</label>
                             <input v-model="(currentForm.import_history_detail.Amount)" type="number" class="form-control"  required/>
                         </div>
@@ -524,9 +544,19 @@ img {
                             <label for="description_product" class="col-form-label">Mô tả sản phẩm:</label>
                             <textarea v-model="currentForm.Description" class="form-control" id="description_product" required></textarea>
                         </div>
-                        <div class="mb-3">
+                        <!-- <div class="mb-3">
                             <label for="size_product" class="col-form-label">Kích thước:</label>
                             <input v-model="currentForm.Size" type='text' class="form-control" id="size_product"/>
+                        </div> -->
+                        <div class="mb-3">
+                            <label for="size_product" class="col-form-label">Kích thước:</label>
+                            <br>
+                            <div v-for="(item,index) in currentForm.Dimensions" class="dimensions-box m-2">
+                                <InputMask id="basic" v-model="currentForm.Dimensions[index]" mask="99 x 99 x 99" />
+                                <Button @click="RemoveDimentions(index)" icon="fas fa-minus" class="ml-2 bg-danger"></Button>
+                            </div>
+                            <Button @click="InsertDimensions" icon="fas fa-plus" class="btn btn-success ml-2"></Button>
+                            
                         </div>
                         <div class="input-group mb-3">
                                     <div class="input-group-prepend">
@@ -560,14 +590,15 @@ img {
                                     </div>
                                     <Dropdown v-model="currentForm.ID_S" :options="suppliers" optionLabel="Name_S" optionValue="ID_S" placeholder="Chọn nhà cung cấp" class="w-full md:w-14rem" style="z-index: 10008;" />
                         </div>    
-                        <div class="modal-footer">
-                            <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> -->
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button v-if="mode == 'insert'" type="submit" class="btn btn-primary">Insert</button>
-                            <button v-else type="submit" class="btn btn-primary">Update</button>
-                        </div>
+                        
                     </div>
-                    
+                    <div class="modal-footer">
+                        <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> -->
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button v-if="mode == 'insert'" type="submit" class="btn btn-primary">Insert</button>
+                        <button v-else-if="mode == 'import'" type="submit" class="btn btn-primary">Import</button>
+                        <button v-else type="submit" class="btn btn-primary">Update</button>
+                    </div>
                 </form>
             </div>
             </div>

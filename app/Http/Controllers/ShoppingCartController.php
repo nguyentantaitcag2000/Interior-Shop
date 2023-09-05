@@ -48,7 +48,8 @@ class ShoppingCartController extends Controller
         $id_product = request('ID_Product');
         $id_color = request('ID_Color');
         $id_material = request('ID_Material');
-        $result = $this->shoppingCardRepository->store($id_user, $amount, $id_product,$id_color,$id_material);
+        $id_dimensions = request('ID_Dimensions');
+        $result = $this->shoppingCardRepository->store($id_user, $amount, $id_product,$id_color,$id_material,$id_dimensions);
         return json_encode($result);
         
         

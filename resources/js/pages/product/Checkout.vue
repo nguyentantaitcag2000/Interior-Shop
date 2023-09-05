@@ -20,8 +20,10 @@ interface FormState{
     idProductBuyNow: number | null,
     idColorBuyNow: number | null,
     idMaterialBuyNow: number | null,
+    idDimensionsBuyNow: number | null,
     nameColor?: string|null,
     nameMaterial?: string|null
+    nameDimensions?: string|null
 }
 const form = reactive<FormState>({
     address:'',
@@ -36,6 +38,7 @@ const form = reactive<FormState>({
     idProductBuyNow:null,
     idColorBuyNow:null,
     idMaterialBuyNow:null,
+    idDimensionsBuyNow:null,
 });
 const methodOfPaymentList = ref<methodOfPayment[]>();
 const shipMethodList = ref<shipMethod[]>();
@@ -78,6 +81,7 @@ const calcMoney = ()=>{
         form.idProductBuyNow = Number(route.params.id); 
         form.idColorBuyNow = Number(route.params.idColor); 
         form.idMaterialBuyNow = Number(route.params.idMaterial); 
+        form.idDimensionsBuyNow = Number(route.params.idDimensions); 
 
         if (product.value && product.value.Price)
             total = Number(route.params.amount)  * product.value.Price;
@@ -105,6 +109,8 @@ onMounted(()=>{
                     form.nameColor = product.value.detail_product_color.filter(dpc => dpc.ID_Color == Number(route.params.idColor))[0].color.Name_Color
                 if(product.value.detail_product_material.length > 0)
                     form.nameMaterial = product.value.detail_product_material.filter(dpc => dpc.ID_Material == Number(route.params.idMaterial))[0].material.Name_Material
+                if(product.value.dimensions.length > 0)
+                    form.nameDimensions = product.value.dimensions.filter(dpc => dpc.ID_D == Number(route.params.idDimensions))[0].Name_D
             }
             calcMoney();
         });
@@ -196,6 +202,7 @@ onMounted(()=>{
                                 <th scope="col">Tên sản phẩm</th>
                                 <th scope="col">Màu sắc</th>
                                 <th scope="col">Chất liệu</th>
+                                <th scope="col">Kích thước</th>
                                 <th scope="col">Số lượng</th>
                                 <th scope="col">Tổng tiền</th>
                             </tr>
@@ -206,6 +213,7 @@ onMounted(()=>{
                                 <th scope="row">{{ product?.Name_Product }}</th>
                                 <td>{{ form.nameColor }}</td>
                                 <td>{{ form.nameMaterial }}</td>
+                                <td>{{ form.nameDimensions }}</td>
                                 <td>{{ route.params.amount }}</td>
                                 <td>{{ LazyConvert.ToMoney(product?.Price) }}</td>
                             </tr>
@@ -213,6 +221,7 @@ onMounted(()=>{
                                 <th scope="row">{{ ca.cart_detail[0].product.Name_Product }}</th>
                                 <td>{{ ca.cart_detail[0].color != null ? ca.cart_detail[0].color.Name_Color : '' }}</td>
                                 <td>{{ ca.cart_detail[0].material != null ? ca.cart_detail[0].material.Name_Material : '' }}</td>
+                                <td>{{ ca.cart_detail[0].dimensions != null ? ca.cart_detail[0].dimensions.Name_D : '' }}</td>
                                 <td>{{ ca.cart_detail[0].Amount_CD }}</td>
                                 <td>{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price) }}</td>
                             </tr>

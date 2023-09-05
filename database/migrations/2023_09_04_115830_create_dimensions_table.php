@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('cart_detail', function (Blueprint $table) {
-            $table->integer('ID_Material')->nullable();
-            $table->foreign('ID_Material')->references('ID_Material')->on('material')->onDelete('cascade');
+        Schema::create('dimensions', function (Blueprint $table) {
+            $table->integer('ID_D',true);
+            $table->string('Name_D',30);
+            $table->integer('ID_Product');
+            $table->timestamps();
+            $table->foreign('ID_Product')->references('ID_Product')->on('product')->cascadeOnDelete();
             
         });
     }
@@ -23,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('cart_detail', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('dimensions');
     }
 };

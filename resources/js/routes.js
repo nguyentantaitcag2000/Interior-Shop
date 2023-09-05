@@ -86,7 +86,7 @@ export default [
     }
     ,
     {
-        path: '/checkout/:id?/:amount?/:idColor?/:idMaterial?',
+        path: '/checkout/:id?/:amount?/:idColor?/:idMaterial?/:idDimensions?',
         name: 'checkout',
         component: Checkout,
         meta: { title: 'Thanh toán' }

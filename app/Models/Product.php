@@ -35,6 +35,10 @@ class Product extends Model
     {
         return $this->hasMany(DetailProductColor::class,"ID_Product");
     }
+    public function dimensions()
+    {
+        return $this->hasMany(dimensions::class,"ID_Product");
+    }
     public function category()
     {
         return $this->belongsTo(Category::class,"ID_Category");

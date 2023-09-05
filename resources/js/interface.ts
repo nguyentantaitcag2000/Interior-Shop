@@ -68,7 +68,14 @@ export interface cartDetail{
     product: product,
     ID_Color:number,
     color:color,
-    material:material
+    material:material,
+    dimensions:dimensions,
+
+}
+export interface dimensions{
+    ID_D:number,
+    Name_D:string,
+    ID_Product:number,
 }
 export interface product{
     ID_Product :number,
@@ -76,9 +83,9 @@ export interface product{
     Description:string,
     Price:number,
     Avatar:string,
-    Size:string,
     Amount_Product:number,
     category: category,
+    dimensions:dimensions[],
     detail_product_image: detailProductImage[]
     detail_product_material: detailProductMaterial[]
     detail_product_color: detailProductColor[]

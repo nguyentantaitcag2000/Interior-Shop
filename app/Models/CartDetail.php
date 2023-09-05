@@ -16,7 +16,8 @@ class CartDetail extends Model
         'ID_Product',
         'Amount_CD',
         'ID_Color',
-        'ID_Material'
+        'ID_Material',
+        'ID_D'
 
     ];
     public function product()
@@ -34,5 +35,9 @@ class CartDetail extends Model
     public function material()
     {
         return $this->belongsTo(Material::class,'ID_Material');
+    }
+    public function dimensions()
+    {
+        return $this->belongsTo(dimensions::class,'ID_D');
     }
 }

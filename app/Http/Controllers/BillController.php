@@ -43,6 +43,7 @@ class BillController extends Controller
         $data = $bill->load(['order.orderDetail.shoppingCart.cart_detail.product',
         'order.orderDetail.shoppingCart.cart_detail.color',
         'order.orderDetail.shoppingCart.cart_detail.material',
+        'order.orderDetail.shoppingCart.cart_detail.dimensions',
         'order.methodofpayment']);
         return $data;
     }

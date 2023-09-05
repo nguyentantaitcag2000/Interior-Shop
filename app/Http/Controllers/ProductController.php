@@ -6,6 +6,7 @@ use App\Models\Color;
 use App\Models\DetailProductColor;
 use App\Models\DetailProductImage;
 use App\Models\DetailProductMaterial;
+use App\Models\dimensions;
 use App\Models\Material;
 use App\Models\Product;
 use App\Repositories\Auth\AuthRepository;
@@ -29,7 +30,7 @@ class ProductController extends Controller
     public function index($by,$keyword)
     {
         $query = Product::select()
-            ->with(['category','detailProductImage','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
+            ->with(['category','dimensions','detailProductImage','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
             ,'detailProductMaterial.material',
             'detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
             ,'detailProductColor.color']);
@@ -65,7 +66,7 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         try{
-
+            $this->authRepository->CheckLogin();
         
             return DB::transaction(function(){
                 $Image = new Image();
@@ -80,11 +81,25 @@ class ProductController extends Controller
                     'Description' => request('Description'),
                     'Price' => request('Price'),
                     'Avatar' =>  $Image->imagePathAVT_Full,
-                    'Size' => request('Size'),
                     'ID_S' => request('ID_S'),
                 ]);
                 
                 $productID = $product->ID_Product;
+                //DIMENSIONS
+                $data_insert_to_dimensions = [];
+                foreach (request('Dimensions') as $key => $value) {
+                    if( ! empty($value) )
+                    {
+                        $data_insert_to_dimensions[] = [
+                            'ID_Product' => $productID,
+                            'Name_D' => $value,
+                        ];
+                    }
+                }
+                if(count($data_insert_to_dimensions) > 0)
+                {
+                    dimensions::insert($data_insert_to_dimensions);
+                }
                 // MATERIAL
                 // MATERIAL
                 // MATERIAL
@@ -166,12 +181,13 @@ class ProductController extends Controller
                 $myProduct->Description = request('Description');
                 $myProduct->Price = request('Price');
                 $myProduct->Avatar = $Image->imagePathAVT_Full;
-                $myProduct->Size = request('Size');
                 $myProduct->ID_S = request('ID_S');
 
                 $myProduct->save();
                 
                 $productID = $id;
+
+                $this->insertSize(request('Dimensions'),$productID);
                 // MATERIAL
                 // MATERIAL
                 // MATERIAL
@@ -260,16 +276,32 @@ class ProductController extends Controller
         }
     
     }
-    private function getRelates($table)
+private function getRelates($table)
     {
         return $table->with('detailProductImage')
         ->with('category')
+        ->with('dimensions')
         ->with(['detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
             ,'detailProductMaterial.material'])
         ->with(['detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
             ,'detailProductColor.color']);
     }
-   
+    private function insertSize($array_Dimensions,$productID)
+    {
+        
+        dimensions::where('ID_Product',$productID)->delete();
+        $data_insert_to_dimensions = [];
+        foreach ($array_Dimensions as $key => $value) {
+            if( ! empty($value) )
+            {
+                $data_insert_to_dimensions[] = [
+                    'ID_Product' => $productID,
+                    'Name_D' => $value,
+                ];
+            }
+        }
+        dimensions::insert($data_insert_to_dimensions);
+    }
     private function insertDetailMaterial($array_id_materials,$productID)
     {
         $materialsToInsert = [];
@@ -279,6 +311,7 @@ class ProductController extends Controller
                 'ID_Material' => $array_id_materials[$i]
             ];
         }
+        DetailProductMaterial::where('ID_Product')->delete();
         DetailProductMaterial::insert($materialsToInsert);
     }
     private function insertDetailColor($array_id_colors,$productID)
@@ -290,6 +323,7 @@ class ProductController extends Controller
                 'ID_Color' => $array_id_colors[$i]
             ];
         }
+        DetailProductMaterial::where('ID_Product')->delete();
         DetailProductColor::insert($colorsToInsert);
     }
     

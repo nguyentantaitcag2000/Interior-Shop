@@ -45,14 +45,14 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/bill/update/{bill}', [BillController::class, 'update']);
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/products/inventory', [ProductController::class, 'inventory']);
-
+    Route::post('/InsertProduct', [ProductController::class, 'store']);
 });
 //POST
 Route::get('/ship-method', [ShipMethodController::class, 'index']);
 Route::get('/method-of-payment', [MethodOfPaymentController::class, 'index']);
 Route::post('/signup', [UserController::class, 'store']);
 Route::post('/InsertCategory', [CategoryController::class, 'store']);
-Route::post('/InsertProduct', [ProductController::class, 'store']);
+
 Route::post('/UpdateCategory/{id}', [CategoryController::class, 'update']);
 Route::post('/UpdateProduct/{id}', [ProductController::class, 'update']);
 Route::delete('/delete/category/{id}', [CategoryController::class, 'destroy']);

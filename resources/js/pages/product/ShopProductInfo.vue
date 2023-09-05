@@ -11,7 +11,7 @@ img {
 }
 </style>
 <script setup lang="ts">
-import {onMounted, ref,reactive,computed,watch} from 'vue';
+import {onMounted, ref,reactive,computed,watch,watchEffect} from 'vue';
 import { useRoute } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { product } from '../../interface';
@@ -22,6 +22,7 @@ import Galleria from 'primevue/Galleria';
 import SelectButton from 'primevue/selectbutton';
 import Image from 'primevue/image';
 import Rating from 'primevue/rating';
+import Breadcrumb from 'primevue/breadcrumb';
 const route = useRoute();
 const router = useRouter();
 const myProduct = ref<product>();
@@ -35,10 +36,20 @@ interface MyImage {
 }
 
 const images = ref<MyImage[]>([]);
+const home_breadcrumb = ref({
+    icon: 'fas fa-home',
+    to: '/',
+});
+interface breadcrumb{
+    label:string,
+    to:string,
+}
+const items_Breadcrumb = reactive<breadcrumb[]>([]);
 interface FormState{
     ID_Product: number,
     ID_Color: number|null,
     ID_Material: number|null,
+    ID_Dimensions: number|null,
     Amount: number
 }
 const responsiveOptions = ref([
@@ -68,7 +79,8 @@ const initForm = {
     ID_Product: -1,
     Amount: 1,
     ID_Color: null,
-    ID_Material: null
+    ID_Material: null,
+    ID_Dimensions: null
 }
 let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)))
 const changeAmount = (event:Event) => {
@@ -93,9 +105,18 @@ const checkChooseMaterial = ()=>{
         throw '';
     }
 }
+const checkChooseSize = ()=>{
+    if(isNotHaveSize() == false && form.ID_Dimensions == null)
+    {
+        LazyCodet.AlertError("Vui lòng chọn kích thước của sản phẩm !");
+        throw '';
+    }
+}
 const AddCart = ()=>{
     checkChooseColor();
     checkChooseMaterial();
+    checkChooseSize();
+
     LazyCodet.AlertProcessing({
         requireConfirm: false,
         workerFunction() {
@@ -117,7 +138,8 @@ const AddCart = ()=>{
 const BuyNow = () => {
     checkChooseColor();
     checkChooseMaterial();
-    router.push('/checkout/' + myProduct.value?.ID_Product + '/' + form.Amount + '/' +  form.ID_Color + '/' +  form.ID_Material );
+    checkChooseSize();
+    router.push('/checkout/' + myProduct.value?.ID_Product + '/' + form.Amount + '/' +  form.ID_Color + '/' +  form.ID_Material + '/' +  form.ID_Dimensions );
 }
 const isNotHaveColor = ()=>{
     if(myProduct.value?.detail_product_color.length == 0)
@@ -129,11 +151,26 @@ const isNotHaveMaterial = ()=>{
         return true;
     return myProduct.value?.detail_product_material.length == 1 && myProduct.value?.detail_product_material[0].ID_Material == 0;
 }
+const isNotHaveSize = ()=>{
+    if(myProduct.value?.dimensions.length == 0)
+        return true;
+    return false;
+}
 const loadProduct = () => {
     form.ID_Product = Number(route.params.id);
     axios.get('/api/product/' + route.params.id).then(res => {
         myProduct.value = res.data;
-
+        let category = myProduct.value?.category.Name_Category == undefined ? '' : myProduct.value?.category.Name_Category;
+        items_Breadcrumb.splice(0,items_Breadcrumb.length);
+        items_Breadcrumb.push({
+            label:category,
+            to:'/?category=' + category
+        });
+        items_Breadcrumb.push({
+            label:myProduct.value?.Name_Product ? myProduct.value?.Name_Product  : '',
+            to:'#'
+        });
+        console.log(items_Breadcrumb);
         if (myProduct.value?.Avatar) {
             images.value.push({
                 itemImageSrc: myProduct.value.Avatar,
@@ -171,7 +208,10 @@ onMounted(()=>{
 });
 </script>
 <template>
-    <div class="container p-5 mt-5 bg-light" style="border-radius: 25px;">
+    <div class="p-5 mt-5 bg-light" style="border-radius: 25px;">
+        <div class="row mb-5">
+            <Breadcrumb :home="home_breadcrumb" :model="items_Breadcrumb" />
+        </div>
         <div class="row w-100">
             <div class="col-lg-5">
                 <div class="p-3">
@@ -217,7 +257,13 @@ onMounted(()=>{
                             </span>
                             <SelectButton v-else v-model="form.ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />
                         </div>
-                        <span class="d-block mt-4"><b>Kích thước:</b> {{ myProduct?.Size }}</span><br>
+                        <div class="mt-4">
+                            <span><b>Kích thước:</b></span>
+                            <span v-if="isNotHaveSize()">
+                                {{ ' Không xác định' }}
+                            </span>
+                            <SelectButton v-else v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  />
+                        </div>
 
                         <div class="row g-3 align-items-center mt-4">
                             <div class="col-auto">
