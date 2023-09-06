@@ -52,7 +52,7 @@ watch(()=> filter_by.value, (newVal:FilterState) => {
         },
     })
 
-    
+
 });
 // const getSeverity = (status:string) => {
 //     switch (status) {
@@ -165,7 +165,7 @@ onMounted(()=>{
             setCountCard(array.length);
         }
     });
-    
+
 });
 
 </script>
@@ -181,7 +181,7 @@ onMounted(()=>{
       <!-- <button class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button> -->
       <!-- <button class="w3-button w3-black w3-display-right" onclick="plusDivs(1)">&#10095;</button> -->
     </div>
-    
+
     <div class="menu-product container bg-light rounded pt-2 mt-3 change-background" data-background="#9adbf6" style="justify-content: center;">
         <div class="row mt-4 mb-4" >
             <div v-for="ca in categories" class="col hover w3-animate-left-08">
@@ -194,13 +194,13 @@ onMounted(()=>{
     </div>
     <hr>
     <div class="container bg-light rounded pt-2 mt-3 change-background" data-background="#f6d9d9">
-        
-        <div class="row mb-3">
+
+        <div v-if="search.by=='_'" class="row mb-3">
                 <h3 class="h3 w3-animate-opacity">Sản phẩm bán chạy <img width="50" src="/new.gif" /></h3>
         </div>
-        <div class="row mb-3">
+        <div v-if="search.by=='_'" class="row mb-3">
             <div class="card">
-                
+
                 <Carousel   :value="products?.slice(0,28)" :numVisible="3" :numScroll="1" :responsiveOptions="responsiveOptions" circular :autoplayInterval="3000">
                     <template #item="slotProps">
                         <div style="height: 350px;" class="border-1 surface-border border-round m-2 text-center py-5 px-3">
@@ -212,7 +212,7 @@ onMounted(()=>{
                             <div>
                                 <h4 class="mb-1"><router-link :to="'/product/' + slotProps.data.ID_Product">{{  slotProps.data.Name_Product  }}</router-link></h4>
                                 <h6 class="mt-0 mb-3">${{ LazyConvert.ToMoney( slotProps.data.Price) }}</h6>
-                            
+
                             </div>
                         </div>
                     </template>
@@ -224,7 +224,7 @@ onMounted(()=>{
             <Button icon="fas fa-filter"></Button>
             <Dropdown v-model="filter_by" :options="options_filter" optionLabel="name"  placeholder="Sắp xếp theo" ></Dropdown>
         </div>
-        
+
         <div class="row">
             <h3 v-if=" search.by == 'category' " class="h3 w3-animate-opacity">Sản phẩm trong danh mục <b>"{{ search.keyword }}"</b></h3>
             <h3 v-else-if=" search.by == 'all' " class="h3 w3-animate-opacity">Kết quả tìm kiếm cho <b>"{{ search.keyword }}"</b></h3>
@@ -235,8 +235,8 @@ onMounted(()=>{
             <h4>Không có sản phẩm nào !</h4>
         </div>
         <div v-else class="row w-100">
-            
-            
+
+
             <div v-for="pr in products" class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
                 <div class="product-grid2">
                     <div class="product-image2">

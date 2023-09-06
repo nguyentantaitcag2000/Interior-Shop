@@ -24,7 +24,7 @@ const InventoryExport = ()=>{
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'products.xlsx'); 
+        link.setAttribute('download', 'products.xlsx');
         document.body.appendChild(link);
         link.click();
     });
@@ -92,10 +92,10 @@ onMounted(()=>{
                     <div class="small-box bg-warning p-2">
                         <div class="inner">
                             <h3 id="total_users">{{ bills?.length }}</h3>
-                            
+
                             <div class="d-flex">
                                 <p>Đơn hàng cần xử lý</p>
-                                <router-link to="/admin/order/1" class="btn btn-dark ml-3">Xem</router-link>
+                                <router-link to="/admin/bill/1" class="btn btn-dark ml-3">Xem</router-link>
                             </div>
                         </div>
                         <div class="icon">
@@ -111,14 +111,14 @@ onMounted(()=>{
                                 <p>Tổng sản phẩm tồn kho</p>
                                 <button @click="InventoryExport" class="btn btn-light ml-3">Excel Donwload</button>
                             </div>
-                            
+
                         </div>
                         <div class="icon">
                             <i class="fas fa-layer-group"></i>
                         </div>
                     </div>
                 </div>
-                
+
 
             </div>
             <h1>Top các sản phẩm được mua nhiều nhất</h1>

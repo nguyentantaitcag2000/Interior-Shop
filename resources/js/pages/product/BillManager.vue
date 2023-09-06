@@ -22,31 +22,31 @@ watch(()=>route.params,()=>{
 const ChangeBillStatus = (event:Event, ord:order, id_bs:number) => {
     let button = event.target as HTMLElement;
     button.classList.add('disabled');
-    
+
     axios.post('/api/bill/update/' + ord.bill.ID_Bill,{'ID_BS': id_bs}).then(res=>{
         if(res.data.status == 200)
         {
-            
+
             let el = order.value?.filter(item=>item == ord)[0];
             if(el)
             {
                 el = el as order;
                 el.bill = res.data.object;
             }
-            
+
         }
         else
         {
             LazyCodet.AlertError(res.data.message);
         }
-        
+
         button.classList.remove('disabled');
 
     });
 
 
 
-    
+
 
 }
 const loadBill = () =>{
@@ -72,7 +72,7 @@ onMounted(()=>{
             <thead>
                 <tr>
                 <th>Đơn đặt hàng</th>
-                <th>Ngày</th> 
+                <th>Ngày</th>
                 <th>Tình trạng</th>
                 <th>Giao hàng đến</th>
                 <th>Tổng</th>
@@ -80,7 +80,7 @@ onMounted(()=>{
                 </tr>
             </thead>
             <tbody>
-    
+
             <tr v-for="ord in order">
                 <td>
                     <div class="form-check">
@@ -92,20 +92,20 @@ onMounted(()=>{
                 <td>{{ ord.Address_O }}</td>
                 <td>{{ LazyConvert.ToMoney(ord.bill.TotalMoneyCheckout)  }}</td>
                 <td>
-                        <a @click="ChangeBillStatus($event,ord,2)" class="btn btn-success">Đã thanh toán</a>    
+                        <a @click="ChangeBillStatus($event,ord,2)" class="btn btn-success">Đã thanh toán</a>
                         <a @click="ChangeBillStatus($event,ord,1)" class="btn btn-light">Chưa thanh toán</a>
                         <a @click="ChangeBillStatus($event,ord,3)" class="btn btn-primary">Đang vận chuyển</a>
                         <a @click="ChangeBillStatus($event,ord,4)" class="btn btn-danger">Hủy đơn</a>
 
-                    
+
                 </td>
             </tr>
 
-                
-            
+
+
             </tbody>
             </table>
- 
+
             <router-link to="/admin/bill/1"   class="btn btn-link">Xem các đơn chưa thanh toán</router-link>
             <router-link to="/admin/bill/2"   class="btn btn-link">Xem các đơn đã thanh toán</router-link>
             <router-link to="/admin/bill/3"   class="btn btn-link">Xem các đơn đang vận chuyển</router-link>
