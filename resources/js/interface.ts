@@ -34,7 +34,8 @@ export interface users{
     "Address": string,
     "verify": string,
     "regtime": number,
-    "ID_UT": number
+    "ID_UT": number,
+
 }
 export interface bill_status{
     "Name_BS": string,
@@ -76,6 +77,18 @@ export interface dimensions{
     ID_D:number,
     Name_D:string,
     ID_Product:number,
+}
+export interface comment{
+    id:number,
+    content:string,
+    ID_Product:number,
+    reply_to:number,
+    replies: comment[],
+    user:users,
+    created_at:string
+    app_replyFormVisible:boolean,
+    app_seeRepliesVisible:boolean,
+    app_replyContent:string
 }
 export interface product{
     ID_Product :number,

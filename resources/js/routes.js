@@ -1,54 +1,43 @@
-import Dashboard from './components/Dashboard.vue';
-import Product from './pages/product/ListProduct.vue';
-import Category from './pages/category/ListCategory.vue';
-import Shop from './components/Shop.vue';
-import ShopProductInfo from './pages/product/ShopProductInfo.vue';
-import SignIn from './pages/auth/Signin.vue';
-import SignUp from './pages/auth/Signup.vue';
-import Cart from './pages/product/Cart.vue';
-import CartProcessing from './pages/product/CartProcessing.vue';
-import Checkout from './pages/product/Checkout.vue';
-import Bill from './pages/product/Bill.vue';
-import BillManager from './pages/product/BillManager.vue';
+
 export default [  
     {
         path: '/admin/dashboard',
         name: 'admin.dashboard',
-        component: Dashboard,
+        component: ()=> import('./components/Dashboard.vue'),
         meta: { title: 'Daskboard' }
 
     },
     {
         path: '/admin/product',
         name: 'admin.product',
-        component: Product,
+        component: ()=> import('./pages/product/ListProduct.vue'),
         meta: { title: 'Sản phẩm' }
     },
     {
         path: '/admin/category',
         name: 'admin.category',
-        component: Category,
+        component: () => {'./pages/category/ListCategory.vue'},
         meta: { title: 'Danh mục' }
 
     },
     {
         path: '/admin/bill/:id',
         name: 'admin.bill',
-        component: BillManager,
+        component: () => import('./pages/product/BillManager.vue'),
         meta: { title: 'Đơn đặt hàng' }
     },
 
     {
         path: '/',
         name: 'shop',
-        component: Shop,
+        component: () => import('./components/Shop.vue'),
         meta: { title: 'Cửa hàng' }
 
     },
     {
         path: '/product/:id',
         name: 'shop-product-info',
-        component: ShopProductInfo,
+        component: () => import('./pages/product/ShopProductInfo.vue'),
         meta: { title: 'Thông tin sản phẩm' }
 
     }
@@ -56,7 +45,7 @@ export default [
     {
         path: '/auth/signin',
         name: 'signin',
-        component: SignIn,
+        component: () => import('./pages/auth/Signin.vue'),
         meta: { title: 'Đăng nhập' }
 
     }
@@ -64,7 +53,7 @@ export default [
     {
         path: '/auth/signup',
         name: 'signup',
-        component: SignUp,
+        component: () => import('./pages/auth/Signup.vue'),
         meta: { title: 'Đăng kí' }
 
     }
@@ -72,7 +61,7 @@ export default [
     {
         path: '/cart',
         name: 'cart',
-        component: Cart,
+        component: () => import('./pages/product/Cart.vue'),
         meta: { title: 'Giỏ hàng' }
 
     }
@@ -80,7 +69,7 @@ export default [
     {
         path: '/cart/processing',
         name: 'cart.processing',
-        component: CartProcessing,
+        component: () => import('./pages/product/CartProcessing.vue'),
         meta: { title: 'Giỏ hàng đang xử lý' }
 
     }
@@ -88,14 +77,14 @@ export default [
     {
         path: '/checkout/:id?/:amount?/:idColor?/:idMaterial?/:idDimensions?',
         name: 'checkout',
-        component: Checkout,
+        component: () => import('./pages/product/Checkout.vue'),
         meta: { title: 'Thanh toán' }
     }
     ,
     {
         path: '/bill/:id',
         name: 'bill',
-        component: Bill,
+        component: () => import('./pages/product/Bill.vue'),
         meta: { title: 'Chi tiết đơn hàng' }
     }
     

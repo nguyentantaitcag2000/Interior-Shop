@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\bill;
+use App\Models\CartDetail;
 use App\Models\Color;
 use App\Models\DetailProductColor;
 use App\Models\DetailProductImage;
 use App\Models\DetailProductMaterial;
 use App\Models\dimensions;
+use App\Models\import_history_detail;
 use App\Models\Material;
+use App\Models\order;
 use App\Models\Product;
+use App\Models\product_price_history;
+use App\Models\ShoppingCart;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\Auth\AuthRepositoryInterface;
 use Carbon\Carbon;
@@ -89,6 +95,12 @@ class ProductController extends Controller
                 ]);
                 
                 $productID = $product->ID_Product;
+
+                //Price History
+                product_price_history::create([
+                    'ID_Product' => $productID,
+                    'price' => request('Price')
+                ]);
                 //DIMENSIONS
                 $data_insert_to_dimensions = [];
                 foreach (request('Dimensions') as $key => $value) {
@@ -181,6 +193,166 @@ class ProductController extends Controller
             'object' => $products
         ]);
     }
+    public function top10()
+    {
+
+        $subquery = CartDetail::select('ID_Product', DB::raw('MAX(created_at) as max_created_at'))
+            ->groupBy('ID_Product');
+
+        $data = CartDetail::with(['product'])
+            ->joinSub($subquery, 'latest_cart', function ($join) {
+                $join->on('cart_detail.ID_Product', '=', 'latest_cart.ID_Product')
+                    ->on('cart_detail.created_at', '=', 'latest_cart.max_created_at');
+            })
+            ->orderBy('latest_cart.max_created_at', 'DESC')
+            ->limit(10)
+            ->get();
+
+        // Trong truy vấn này, chúng ta sử dụng joinSub để kết nối truy vấn con với truy vấn chính, sử dụng 'ID_Product' và 'created_at' để xác định bản ghi có 'created_at' lớn nhất cho mỗi 'ID_Product'. Sau đó, chúng ta sắp xếp kết quả theo 'max_created_at' để lấy ra các bản ghi mới nhất và giới hạn kết quả để chỉ trả về 10 bản ghi.
+
+        $product = [];
+        foreach ($data as $row)
+        {
+            $product[] = $row->product;
+        }
+        return $product;
+
+    }
+    public function tongDoanhSo(Request $request)
+    {
+        $timeCode = $request->input('timeCode');
+        if((int)$timeCode >=1 && $timeCode <= 12)
+        {
+            $totalSalesData = [];
+            if($timeCode == 1)
+            {
+                for ($i = 0; $i < 30; $i++) {
+                    $date = now()->subDays($i)->toDateString();
+                    $endDate = now()->subDays($i - 1)->toDateString();
+        
+                    $totalSales = DB::select("
+                        SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS TotalSales
+                        FROM bill
+                        WHERE ID_BS = 2
+                        AND CreateDate BETWEEN '$date' AND '$endDate';
+                    ")[0]->TotalSales;
+        
+                    $totalSalesData[] = $totalSales;
+                }
+        
+                return $totalSalesData;
+            }
+            else if($timeCode >=3 && $timeCode <=12)
+            {
+                for ($i = 0; $i < $timeCode; $i++) {
+                    $date = now()->subMonths($i)->startOfMonth()->toDateString();
+                    $endDate = now()->subMonths($i - 1)->startOfMonth()->subDay()->toDateString();
+        
+                    $totalSales = DB::select("
+                        SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS TotalSales
+                        FROM bill
+                        WHERE ID_BS = 2
+                        AND CreateDate BETWEEN '$date' AND '$endDate';
+                    ")[0]->TotalSales;
+        
+                    $totalSalesData[] = $totalSales;
+                }
+        
+                return $totalSalesData;
+        
+            }
+            // COALESCE -> Nếu như mà trường hợp khoảng thời gián đó không có bán được đơn hàng nào
+            // .. thì nó sẽ mặc định là 0
+            $row = DB::select("SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS TotalSales
+            FROM bill
+            WHERE ID_BS = 2 AND CreateDate >= CURDATE() - INTERVAL $timeCode MONTH;
+            ")[0];
+        }
+        else
+        {
+            
+            $totalSalesData = [];
+            $soNam = 2;
+
+            // Lặp qua từng năm và lấy tổng doanh số
+            for ($i = 0; $i <= $soNam; $i++) {
+                $startDate = now()->subYears($i)->startOfYear()->toDateString();
+                $endDate = now()->subYears($i)->endOfYear()->toDateString();
+
+                $totalSales = DB::select("
+                    SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS TotalSales
+                    FROM bill
+                    WHERE ID_BS = 2
+                    AND CreateDate BETWEEN '$startDate' AND '$endDate';
+                ")[0]->TotalSales;
+
+                $totalSalesData[] = $totalSales;
+            }
+
+            return $totalSalesData;
+
+        }
+        
+    }
+    public function tongNguoiDatHang(Request $request)
+    {
+        $timeCode = $request->input('timeCode');
+        if ((int)$timeCode >= 1 && $timeCode <= 12) {
+            $totalOrdersData = [];
+
+            if ($timeCode == 1) {
+                for ($i = 0; $i < 30; $i++) {
+                    $date = now()->subDays($i)->toDateString();
+                    $endDate = now()->subDays($i - 1)->toDateString();
+
+                    $totalOrders = DB::select("
+                        SELECT COUNT(*) AS TotalOrders
+                        FROM bill
+                        WHERE CreateDate BETWEEN '$date' AND '$endDate';
+                    ")[0]->TotalOrders;
+
+                    $totalOrdersData[] = $totalOrders;
+                }
+
+                return $totalOrdersData;
+            } elseif ($timeCode >= 3 && $timeCode <= 12) {
+                for ($i = 0; $i < $timeCode; $i++) {
+                    $date = now()->subMonths($i)->startOfMonth()->toDateString();
+                    $endDate = now()->subMonths($i - 1)->startOfMonth()->subDay()->toDateString();
+
+                    $totalOrders = DB::select("
+                        SELECT COUNT(*) AS TotalOrders
+                        FROM bill
+                        WHERE CreateDate BETWEEN '$date' AND '$endDate';
+                    ")[0]->TotalOrders;
+
+                    $totalOrdersData[] = $totalOrders;
+                }
+
+                return $totalOrdersData;
+            }
+        } else {
+            $totalOrdersData = [];
+            $soNam = 1;
+
+            // Lặp qua từng năm và lấy tổng số lượng đơn hàng
+            for ($i = 0; $i <= $soNam; $i++) {
+                $startDate = now()->subYears($i)->startOfYear()->toDateString();
+                $endDate = now()->subYears($i)->endOfYear()->toDateString();
+
+                $totalOrders = DB::select("
+                    SELECT COUNT(*) AS TotalOrders
+                    FROM bill
+                    WHERE CreateDate BETWEEN '$startDate' AND '$endDate';
+                ")[0]->TotalOrders;
+
+                $totalOrdersData[] = $totalOrders;
+            }
+
+            return $totalOrdersData;
+        }
+    }
+
     /**
      * Update the specified resource in storage.
      */
@@ -212,7 +384,11 @@ class ProductController extends Controller
                 $myProduct->save();
                 
                 $productID = $id;
-
+                //Price History
+                product_price_history::create([
+                    'ID_Product' => $productID,
+                    'price' => request('Price')
+                ]);
                 $this->insertSize(request('Dimensions'),$productID);
                 // MATERIAL
                 // MATERIAL
@@ -301,6 +477,34 @@ class ProductController extends Controller
             ];
         }
     
+    }
+    public function amount(Request $request)
+    {
+        $ID_Color = $request->input('ID_Color');
+        $ID_Material = $request->input('ID_Material');
+        $ID_D = $request->input('ID_D');
+        $ID_Product = $request->input('ID_Product');
+        $amountImport = import_history_detail::where('ID_Color',$ID_Color)
+        ->where('ID_Material',$ID_Material)
+        ->where('ID_D',$ID_D)
+        ->where('ID_Product',$ID_Product)
+        ->sum('Amount_IDH');
+        $amountExport = ShoppingCart::where('ID_CS', '!=', 1)
+        ->with(['cart_detail' => function($query) use($ID_Product) {
+            $query->where('ID_Product', $ID_Product);
+        }])
+        ->get()
+        ->sum(function ($shoppingCart) {
+            return $shoppingCart->cart_detail->sum('Amount_CD');
+        });
+
+        $amount = $amountImport - $amountExport;
+        $amount = $amount > 0 ? $amount : 0;
+        return json_encode([
+            'status'=> 200,
+            'message' => 'success',
+            'value' => $amount 
+        ]);
     }
 private function getRelates($table)
     {
