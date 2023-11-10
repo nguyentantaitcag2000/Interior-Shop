@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import {ref, reactive, onMounted,computed, ComputedGetter  } from 'vue';
+import {ref, reactive, onMounted,computed, ComputedGetter,watch  } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -14,7 +14,7 @@ import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import {material,color,category,detailProductColor,detailProductMaterial,detailProductImage,
     importHistoryDetail,
 product} from '../../interface';
-
+const tonKho_import = ref('Không xác định');
 interface FormState{
     'ID_Product': number ,
     'ID_Category': number ,
@@ -35,9 +35,13 @@ interface FormState{
     'detail_product_image': detailProductImage[] ,
     import_history_detail: importHistoryDetail
 }
-const selectedDimensionsImport = ref();
-const selectedMaterialImport = ref();
-const selectedColorImport = ref();
+
+const selectedDimensionsImport = ref<number>();
+const selectedMaterialImport = ref<number>();
+const selectedColorImport = ref<number>();
+const priceImport = ref(1);
+const amountImport = ref(1);
+
 const products = ref<FormState[]>();
 const categories = ref<category[]>();
 const materials = ref([]);
@@ -108,6 +112,31 @@ const getUsers = () => {
         suppliers.value = res.data;
     });
 }
+watch([selectedColorImport, selectedDimensionsImport, selectedMaterialImport], (values: [number?, number?, number?]) => {
+    const [newColor, newDimensions, newMaterial] = values;
+    console.log(newColor);
+    console.log(newDimensions);
+    console.log(newMaterial);
+    if(newColor && newDimensions && newMaterial) {
+        let form = {
+            ID_Color:newColor,
+            ID_Material:newMaterial,
+            ID_D:newDimensions,
+            ID_Product: form_import.ID_Product
+        }
+        axios.post('/api/product/amount',form).then(res=>{
+            if(res.data.status == 200)
+            {
+                tonKho_import.value = res.data.value;
+            }
+            else
+            {
+                LazyCodet.AlertError(res.data.message);
+            }
+        });
+    }
+});
+
 const InsertDimensions = () => {
     currentForm.value.Dimensions.push('');
 }
@@ -160,15 +189,36 @@ const getColorObject = computed(()=>{
 const getMaterialObject = computed(()=>{
     return materials.value.filter((item:any)=> currentForm.value.ID_Material.includes(item.ID_Material));
 })
-const SubmitForm = (event:any) => {
+const SubmitForm = (event:Event) => {
     event.preventDefault();
     LazyCodet.AlertProcessing({
         requireConfirm: false,
         alertMessage: "Đang xử lý...",
         workerFunction: () => {
             let isInsert = mode.value == 'insert'; 
+            let isImport = mode.value == 'import'; 
+            
             let urlCall = isInsert ? '/api/InsertProduct' : '/api/UpdateProduct/' + currentForm.value.ID_Product;
-            return axios.post(urlCall,currentForm.value).then((res)=>{
+            
+            if(isInsert)
+                urlCall = '/api/InsertProduct';
+            else if(isImport)
+                urlCall = '/api/ImportHistory';
+            else
+                urlCall = '/api/UpdateProduct/' + currentForm.value.ID_Product;
+            var dataForm:any = currentForm.value;
+            if(isImport)
+            {
+                dataForm = {
+                    ...dataForm,
+                    selectedColorImport: selectedColorImport.value,
+                    selectedMaterialImport:selectedMaterialImport.value,
+                    selectedDimensionsImport:selectedDimensionsImport.value,
+                    amountImport:amountImport.value,
+                    priceImport:priceImport.value
+                }
+            }
+            return axios.post(urlCall,dataForm).then((res)=>{
                 if(res.data.status == 200)
                 {
                     LazyCodet.AlertSuccess(res.data.message);
@@ -177,6 +227,14 @@ const SubmitForm = (event:any) => {
                         if(isInsert)
                         {
                             products.value.unshift(res.data.object);
+                        }
+                        else if(isImport)
+                        {
+                            selectedDimensionsImport.value = undefined;
+                            selectedMaterialImport.value = undefined;
+                            selectedColorImport.value = undefined;
+                            tonKho_import.value = 'Không xác định';
+                            LazyCodet.AlertSuccess(res.data.message);
                         }
                         else{
                             let index = products.value.findIndex(item => item.ID_Product === currentForm.value.ID_Product);
@@ -256,10 +314,11 @@ const importProduct = (productData:FormState) => {
         myProduct.dimensions.forEach((di:any) => {
             if(products.value)
             {
-                form_import.Dimensions.push(di.Name_D);    
+                form_import.Dimensions.push(di);    
             }
             
         });
+    form.import_history_detail.Price = 1;
     if(productData.detail_product_material)
         form_import.ID_Material = productData.detail_product_material.map(item => {
             return item.material.ID_Material;
@@ -479,19 +538,28 @@ img {
                     <div v-if="mode=='import'">
                         <div class="mb-3">
                             <label for="size_product" class="col-form-label">Kích thước:</label>
-                            <SelectButton v-model="selectedDimensionsImport" class="mt-3" :options="currentForm.Dimensions" />
+                            <SelectButton v-model="selectedDimensionsImport" class="mt-3" :options="currentForm.Dimensions" optionValue="ID_D" optionLabel="Name_D"/>
                         </div>
                         <div class="mb-3">
                             <label for="size_product" class="col-form-label">Màu sắc:</label>
                             <SelectButton v-model="selectedColorImport" class="mt-3" :options="getColorObject" option-label="Name_Color" option-value="ID_Color" />
                         </div>
                         <div class="mb-3">
-                            <label for="size_product" class="col-form-label">Màu sắc:</label>
+                            <label for="size_product" class="col-form-label">Chất liệu:</label>
                             <SelectButton v-model="selectedMaterialImport" class="mt-3" :options="getMaterialObject" option-label="Name_Material" option-value="ID_Material"  />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="price_product">Số lượng:</label>
-                            <input v-model="(currentForm.import_history_detail.Amount)" type="number" class="form-control"  required/>
+                            <label class="form-label">Số lượng:</label>
+                            <input v-model="(amountImport)" type="number" class="form-control"  required/>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tồn kho: {{ tonKho_import }}</label>
+                            
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Đơn giá:</label>
+                            <input v-model="(priceImport)" type="number" class="form-control"  required/>
                         </div>
                     </div>
                     <div v-else>
@@ -606,4 +674,4 @@ img {
     </div>
    
     
-</template>../../interface2../../interface2
+</template>

@@ -2,6 +2,8 @@
 import axios from 'axios';
 import {onMounted, ref, reactive} from 'vue'
 import {users,product,bill} from '../interface';
+import Dropdown from 'primevue/dropdown';
+import Chart from 'primevue/chart';
 
 interface Inventory{
     products:product[],
@@ -15,6 +17,211 @@ const inventory = ref<Inventory>({
     totalAmount: 0
 
 });
+const FilterOptions = ref([
+    { name: 'Toàn bộ thời gian', code: 'A' },
+    { name: '1 tháng', code: '1' },
+    { name: '3 tháng', code: '3' },
+    { name: '6 tháng', code: '6' },
+    { name: '1 năm', code: '12' }
+]);
+const selectedFilter = ref(FilterOptions.value[0]);
+
+const tongDoanhSo = ref(-1);
+const top10 = ref<product[]>([]);
+
+const chartData = ref();
+const chartOptions = ref();
+const chartData_SoLuongNguoiDatHang = ref();
+const chartOptions_SoLuongNguoiDatHang = ref();
+const chartDataFromAPI = ref([]);
+const chartDataFromAPI_SoLuongNguoiDatHang = ref([]);
+const setChartData = () => {
+    let ngayOrThangOrNam = "";
+    if(selectedFilter.value.code == "1")
+        ngayOrThangOrNam = "Ngày ";
+    else if(selectedFilter.value.code == "A")
+        ngayOrThangOrNam = "Năm ";
+    else
+        ngayOrThangOrNam = "Tháng ";
+    
+
+    const labels = Object.keys(chartDataFromAPI.value).map(key => ngayOrThangOrNam + (parseInt(key) + 1));
+    return {
+
+        labels: labels,
+        datasets: [
+            {
+                label: 'Doanh số',
+                data: Object.values(chartDataFromAPI.value),
+                backgroundColor: ['rgba(255, 159, 64, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(153, 102, 255, 0.2)'],
+                borderColor: ['rgb(255, 159, 64)', 'rgb(75, 192, 192)', 'rgb(54, 162, 235)', 'rgb(153, 102, 255)'],
+                borderWidth: 1
+            }
+        ]
+    };
+};
+const setChartOptions = () => {
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--text-color');
+    const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
+    const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+
+    return {
+        plugins: {
+            legend: {
+                labels: {
+                    color: textColor
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: textColorSecondary
+                },
+                grid: {
+                    color: surfaceBorder
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: textColorSecondary
+                },
+                grid: {
+                    color: surfaceBorder
+                }
+            }
+        }
+    };
+}
+
+
+const setChartData_SoLuongNguoiDatHang = () => {
+    let ngayOrThangOrNam = "";
+    if(selectedFilter.value.code == "1")
+        ngayOrThangOrNam = "Ngày ";
+    else if(selectedFilter.value.code == "A")
+        ngayOrThangOrNam = "Năm ";
+    else
+        ngayOrThangOrNam = "Tháng ";
+    
+
+    const labels = Object.keys(chartDataFromAPI_SoLuongNguoiDatHang.value).map(key => ngayOrThangOrNam + (parseInt(key) + 1));
+    return {
+
+        labels: labels,
+        datasets: [
+            {
+                label: 'Số lần/người đặt',
+                data: Object.values(chartDataFromAPI_SoLuongNguoiDatHang.value),
+                backgroundColor: ['rgba(255, 159, 64, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(153, 102, 255, 0.2)'],
+                borderColor: ['rgb(255, 159, 64)', 'rgb(75, 192, 192)', 'rgb(54, 162, 235)', 'rgb(153, 102, 255)'],
+                borderWidth: 1
+            }
+        ]
+    };
+};
+// const setChartOptions_SoLuongNguoiDatHang = () => {
+//     const documentStyle = getComputedStyle(document.documentElement);
+//     const textColor = documentStyle.getPropertyValue('--text-color');
+//     const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
+//     const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+
+//     return {
+//         plugins: {
+//             legend: {
+//                 labels: {
+//                     color: textColor
+//                 }
+//             }
+//         },
+//         scales: {
+//             x: {
+//                 ticks: {
+//                     color: textColorSecondary
+//                 },
+//                 grid: {
+//                     color: surfaceBorder
+//                 }
+//             },
+//             y: {
+//                 beginAtZero: true,
+//                 ticks: {
+//                     color: textColorSecondary
+//                 },
+//                 grid: {
+//                     color: surfaceBorder
+//                 }
+//             }
+//         }
+//     };
+// }
+const setChartOptions_SoLuongNguoiDatHang = () => {
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--text-color');
+    const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
+    const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+
+    // Mảng chứa các giá trị số nguyên duy nhất
+    const uniqueIntegers = Array.from({ length: 10 }, (_, i) => i);
+
+    return {
+        plugins: {
+            legend: {
+                labels: {
+                    color: textColor
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: textColorSecondary
+                },
+                grid: {
+                    color: surfaceBorder
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: textColorSecondary,
+                    callback: function (value:any, index:any, values:any) {
+                        // Chỉ hiển thị giá trị từ mảng uniqueIntegers
+                        return uniqueIntegers.includes(value) ? value.toString() : '';
+                    }
+                },
+                grid: {
+                    color: surfaceBorder
+                }
+            }
+        }
+    };
+};
+function ChooseFilter()
+{
+    tongDoanhSo.value = -1;
+    axios.post('/api/product/tongDoanhSo', {timeCode: selectedFilter.value.code }).then(res=>{
+        const resDataObject: Record<string, number> = res.data;
+
+        tongDoanhSo.value = res.data;
+
+        chartDataFromAPI.value = res.data;
+        tongDoanhSo.value = 0
+        Object.values(resDataObject).forEach((value: number) => {
+            tongDoanhSo.value += value;
+        });
+        chartData.value = setChartData();
+        chartOptions.value = setChartOptions();
+    });
+    axios.post('/api/product/tongNguoiDatHang', {timeCode: selectedFilter.value.code }).then(res=>{
+        chartDataFromAPI_SoLuongNguoiDatHang.value = res.data;
+      
+        chartData_SoLuongNguoiDatHang.value = setChartData_SoLuongNguoiDatHang();
+        chartOptions_SoLuongNguoiDatHang.value = setChartOptions_SoLuongNguoiDatHang();
+    });
+}
 const InventoryExport = ()=>{
     axios({
         url: '/export',
@@ -43,6 +250,10 @@ onMounted(()=>{
     axios.get('/api/products/inventory').then(res=>{
         inventory.value = res.data;
     });
+    axios.post('/api/products/top10').then(res=>{
+        top10.value = res.data;
+    });
+    ChooseFilter();
 });
 </script>
 <template>
@@ -119,23 +330,54 @@ onMounted(()=>{
                     </div>
                 </div>
 
-
             </div>
-            <h1>Top các sản phẩm được mua nhiều nhất</h1>
+            <div class="row" >
+                <div>
+                    Lọc theo 
+                    <Dropdown v-model="selectedFilter" @change="ChooseFilter" :options="FilterOptions" optionLabel="name" placeholder="Chọn 1 tùy chọn" class="w-full md:w-14rem" />
+                </div>
+                
+            </div>
+            <br>
+            <div class="row">
+                
+                <div class="col-12 col-sm-6 col-md-6">
+                    <div class="small-box bg-secondary p-2">
+                        <div class="inner">
+                            <h3 v-if="tongDoanhSo == -1">Loading...</h3>
+                            <h3 v-else>{{ tongDoanhSo.toLocaleString('it-IT', {style : 'currency', currency : 'VND'}) }}</h3>
+                            <div class="d-flex">
+                                <p>Doanh số</p>
+                            </div>
+
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- Biểu đồ doanh số -->
+                <Chart class="w-100" type="bar" :data="chartData" :options="chartOptions" />
+                <!-- Biểu đồ số lượng người mua đặt hàng -->
+                <h1>Số lượng người mua đặt hàng</h1>
+                <Chart class="w-100" type="line" :data="chartData_SoLuongNguoiDatHang" :options="chartOptions_SoLuongNguoiDatHang" />
+            </div>
+            <h1>Top các sản phẩm được mua gần đây</h1>
             <table class="table">
                 <thead>
                     <tr>
+                        <th></th>
                         <th>Tên sản phẩm</th>
-                        <th>Tổng số lượng sản phẩm được bán</th>
+                        <th>Mã sản phẩm</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- <?php foreach ($data['Top10SanPhamDuocMuaNhieuNhat'] as $sanpham) { ?>
-                    <tr>
-                        <td><?php echo $sanpham['Name_Product']; ?></td>
-                        <td><?php echo $sanpham['TongSoLuong']; ?></td>
+                    
+                    <tr v-for="(sp, index) in top10" :key="index" >
+                        <td>{{ index + 1 }}</td>
+                        <td>{{ sp.Name_Product }}</td>
+                        <td>#{{ sp.ID_Product }}</td>
                     </tr>
-                    <?php } ?> -->
                 </tbody>
             </table>
         </div>

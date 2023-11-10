@@ -9,16 +9,10 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
-
-    software-properties-common \
-    gnupg \
-
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd pdo pdo_mysql \
-    && docker-php-ext-install zip \
+    && docker-php-ext-install zip
 
-    && curl -fsSL https://deb.nodesource.com/setup_14.x | bash - \
-    && apt-get install -y nodejs
 
 # Cấu hình Apache
 RUN a2enmod rewrite
@@ -30,23 +24,20 @@ COPY . .
 # Cài đặt Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-
+# Cài đặt các dependencies của project và biên dịch assets
+# FROM node:16-alpine
+# WORKDIR /var/www/html
+# COPY package*.json /var/www/html
+# RUN npm run dev
 # Cài đặt Node.js
-
-RUN npm install
-RUN npm install vue@latest
-
-# Chạy lệnh php artisan storage:link
-RUN php artisan storage:link
-
-RUN chown -R www-data:www-data /var/www/html/storage
-RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
-
-
+RUN apt-get update && apt-get install -y curl software-properties-common gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_14.x | bash - \
+    && apt-get install -y nodejs
+# RUN npm install
+# RUN npm run dev
 # Expose port và khởi động Apache
 EXPOSE 8000
-# CMD php artisan serve --host=0.0.0.0 --port=8000
-# CMD ["-D", "FOREGROUND"]
+CMD php artisan serve --host=0.0.0.0 --port=8000
 # CMD ["apache2-foreground"]
 
 

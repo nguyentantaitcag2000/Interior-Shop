@@ -4,6 +4,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BillController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ColorController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ImportHistoryController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MethodOfPaymentController;
 use App\Http\Controllers\OrderController;
@@ -46,9 +48,17 @@ Route::group(['middleware' => ['web']], function () {
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/products/inventory', [ProductController::class, 'inventory']);
     Route::post('/InsertProduct', [ProductController::class, 'store']);
+    Route::post('/ImportHistory', [ImportHistoryController::class, 'store']);
+    Route::post('/comment', [CommentController::class, 'store']);
 });
 //POST
+Route::post('/products/top10', [ProductController::class, 'top10']);
+Route::post('/product/tongDoanhSo', [ProductController::class, 'tongDoanhSo']);
+Route::post('/product/tongNguoiDatHang', [ProductController::class, 'tongNguoiDatHang']);
+
+Route::post('/product/amount', [ProductController::class,'amount']);
 Route::get('/filter/{id}', [ProductController::class,'filter']);
+Route::get('/comment/{idProduct}',[CommentController::class,'index']);
 Route::get('/ship-method', [ShipMethodController::class, 'index']);
 Route::get('/method-of-payment', [MethodOfPaymentController::class, 'index']);
 Route::post('/signup', [UserController::class, 'store']);

@@ -14,7 +14,7 @@ img {
 import {onMounted, ref,reactive,computed,watch,watchEffect} from 'vue';
 import { useRoute } from 'vue-router';
 import { useRouter } from 'vue-router';
-import { product } from '../../interface';
+import { product,comment } from '../../interface';
 import axios, { formToJSON } from 'axios';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
@@ -27,9 +27,11 @@ import Breadcrumb from 'primevue/breadcrumb';
 const route = useRoute();
 const router = useRouter();
 const myProduct = ref<product>();
+const myComment = ref<comment[]>();
 const myProductRelative = ref<product[]>();
 const activeIndex = ref(1);
 const rating = ref(0);
+const tonKho = ref(0);
 interface MyImage {
     itemImageSrc: string;
     thumbnailImageSrc: string;
@@ -53,6 +55,7 @@ interface FormState{
     ID_Dimensions: number|null,
     Amount: number
 }
+
 const responsiveOptions = ref([
     {
         breakpoint: '991px',
@@ -73,9 +76,35 @@ watch(()=> route.params, ()=>{
     form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
     loadProduct();
 });
+const comment_content = ref('');
+
+const Comment = (event:Event,reply_to?:number,replyContent?:string) => {
+    event.preventDefault();
+    let content = comment_content.value;
+    if(replyContent)
+        content = replyContent;
+    axios.post('/api/comment',{ 
+        content:content,
+        ID_Product:myProduct.value?.ID_Product,
+        reply_to:reply_to,
+    }).then(res=>{
+        if(res.status == 200)
+        {
+            LazyCodet.AlertSuccess(res.data.message);
+            loadComment();
+        }
+        else
+        {
+            LazyCodet.AlertError(res.data.message);
+        }
+    })
+}
 const visibleCount = computed(() => {
     return images.value.length > 3 ? 3 : images.value.length;
 });
+const ID_Color = ref<number>();
+const ID_Material= ref<number>();
+const ID_Dimensions=  ref<number>();
 const initForm = {
     ID_Product: -1,
     Amount: 1,
@@ -83,7 +112,35 @@ const initForm = {
     ID_Material: null,
     ID_Dimensions: null
 }
-let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)))
+
+let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
+watch([ID_Color,ID_Dimensions, ID_Material], (values: [number?, number?, number?]) => {
+    const [newColor, newDimensions, newMaterial] = values;
+    console.log(newColor);
+    console.log(newDimensions);
+    console.log(newMaterial);
+    console.log(myProduct.value?.ID_Product);
+    if(newColor && newDimensions && newMaterial) {
+        let form = {
+            ID_Color:newColor,
+            ID_Material:newMaterial,
+            ID_D:newDimensions,
+            ID_Product: myProduct.value?.ID_Product
+        }
+        axios.post('/api/product/amount',form).then(res=>{
+            console.log(res.data);
+
+            if(res.data.status == 200)
+            {
+                tonKho.value = res.data.value;
+            }
+            else
+            {
+                LazyCodet.AlertError(res.data.message);
+            }
+        });
+    }
+});
 const changeAmount = (event:Event) => {
     let button = event.target as HTMLElement;
 
@@ -112,6 +169,18 @@ const checkChooseSize = ()=>{
         LazyCodet.AlertError("Vui lòng chọn kích thước của sản phẩm !");
         throw '';
     }
+}
+const loadComment = () => {
+    axios.get('/api/comment/' + myProduct.value?.ID_Product).then(res=>{
+        if(res.data.status == 200)
+        {
+            myComment.value = res.data.object;
+        }
+        else
+        {
+            LazyCodet.AlertError(res.data.message);
+        }
+    });
 }
 const AddCart = ()=>{
     checkChooseColor();
@@ -194,6 +263,7 @@ const loadProduct = () => {
         axios.get(`/api/products/category/${myProduct.value?.category.Name_Category}` ).then(res=>{
             myProductRelative.value = res.data;
         });
+        loadComment();
     });
 }
 onMounted(()=>{
@@ -206,6 +276,7 @@ onMounted(()=>{
             setCountCard(array.length);
         }
     });
+    
 });
 </script>
 <template>
@@ -248,7 +319,7 @@ onMounted(()=>{
                             <span v-if="isNotHaveColor()">
                                 {{ ' Không xác định' }}
                             </span>
-                            <SelectButton v-else v-model="form.ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  />
+                            <SelectButton v-else v-model="ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  />
                         </div>
                         
                         <div class="mt-4">
@@ -256,14 +327,14 @@ onMounted(()=>{
                             <span v-if="isNotHaveMaterial()">
                                 {{ ' Không xác định' }}
                             </span>
-                            <SelectButton v-else v-model="form.ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />
+                            <SelectButton v-else v-model="ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />
                         </div>
                         <div class="mt-4">
                             <span><b>Kích thước:</b></span>
                             <span v-if="isNotHaveSize()">
                                 {{ ' Không xác định' }}
                             </span>
-                            <SelectButton v-else v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  />
+                            <SelectButton v-else v-model="ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  />
                         </div>
 
                         <div class="row g-3 align-items-center mt-4">
@@ -291,7 +362,7 @@ onMounted(()=>{
                             
                         </div>
                         <div class="row mt-3">
-                            Tồn kho: {{ myProduct?.Amount_Product }}
+                            Tồn kho: {{ tonKho }}
                         </div>
                     </div>
                 
@@ -350,6 +421,160 @@ onMounted(()=>{
                 </Rating>
             </div>
         </div>
+        <div class="row">
+            <div class="card mb-3 w-100">
+                <input type="text" id="offset_comment" value="0" hidden>
+                <div class="card-header h4">Comments</div>
+                <div class="card-body">
+                    <form @submit="Comment($event)">
+                        <div class="form-group">
+                            <textarea v-model="comment_content" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Comment</button>
+                    </form>
+                    <hr>
+                    <h5>Comments {{ myComment?.length }}:</h5>
+                    <div id="comment_box">
+                        <div v-for="cmt in myComment" data-reply-comment-total="<?=$value['reply_comment_total']?>" class="mb-5">
+                            
+                            <div class="media-body">
+                                <img width="50" height="50" src="/avatar.png" class="mr-3 rounded-circle" alt="...">
+                                <h6 class="mt-0" style="display:contents;"><strong class="ms-2">{{ cmt.user.Email.split('@')[0] }}</strong>  </h6>
+                                <small>{{' ' + new Date(cmt.created_at).toLocaleString()  }}</small>
+                                <!-- --Ellipsis -->
+                                <div class="d-flex justify-content-end" >
+                                    <button type="button"  class="btn-ellipsis btn bg-white p-0 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="btn-ellipsis fas fa-ellipsis-h d-flex flex-row-reverse"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                    
+                                    <button onclick="OpenPopupUpdateComment('<?=$value['comment']?>','<?=$value['ID_C']?>',this)" class="dropdown-item" data-bs-target="#updateModal" type="button" data-bs-toggle="modal">Edit</button>
+                                    <button class="btn_delete_comment dropdown-item" data-id-comment="<?=$value['ID_C']?>">Delete</button>
+                 
+                                    </div>
+                                </div>
+                                <!--// --Ellipsis -->
+
+                            </div>
+                            <div class="content-comment p-3">
+                            {{ cmt.content }}
+                            </div>
+                            
+                        <div class="box_reply card ms-3 <?=$hide_box_reply?>">
+                            <div id="heading_<?= $value['ID_C'] ?>">
+                            <h6 class="mb-0">
+                                <button class="btn-read-reply btn btn-link" type="button" data-toggle="collapse" :data-target="'#collapse_' + cmt.id" aria-expanded="false" :aria-controls="'collapse_' + cmt.id">
+                                Reply comment ({{ cmt.replies.length }})
+                                </button>
+                            </h6>
+                            </div>
+
+                            <div :id="'collapse_' + cmt.id" class="collapse" :aria-labelledby="'heading_' + cmt.id">
+                            <div class="card-body">
+                                <div class="comment_answer_box">
+                                    <div v-for="rep in cmt.replies" >
+                                        
+                                        <div class="media-body">
+                                            <img width="50" height="50" src="/avatar.png" class="mr-3 rounded-circle" alt="...">
+                                            <h6 class="mt-0" style="display:contents;"><strong class="ms-2">{{ rep.user.Email.split('@')[0] }}</strong>  </h6>
+                                            <small>{{' ' + new Date(rep.created_at).toLocaleString()  }}</small>
+                                            <!-- --Ellipsis -->
+                                            <div  class="d-flex justify-content-end">
+                                                <button type="button" class="btn-ellipsis btn bg-white p-0 dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="btn-ellipsis fas fa-ellipsis-h d-flex flex-row-reverse"></i>
+                                                </button>
+                                                <div class="dropdown-menu">
+                                                
+                                                <!-- <button onclick="OpenPopupUpdateComment_Reply('<?=$value['comment_ca']?>','<?=$value['ID_CA']?>','<?=$_POST['ID_C']?>',this)" class="dropdown-item" data-bs-target="#updateModal_Reply" type="button" data-bs-toggle="modal"><?=$data['lang']['edit']?></button>
+                                                <button class="btn_delete_reply dropdown-item" data-id-comment="<?=$value['ID_CA']?>"><?=$data['lang']['delete']?></button> -->
+                                                <!-- <button class="dropdown-item" type="button">Báo cáo</button> -->
+                                                </div>
+                                            </div>
+                                            <!--// --Ellipsis -->
+
+                                        </div>
+                                        <div class="content-comment-reply p-3">
+                                            {{ rep.content }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- <div class="spinner-border m-5" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div> -->
+                                
+                            </div>
+                            </div>
+                        </div>
+                            <button type="button" @click="cmt.app_replyFormVisible = !cmt.app_replyFormVisible" class="btn btn-secondary btn-reply">Reply</button>
+                            <div class="reply-form mt-3" v-show="cmt.app_replyFormVisible">
+                                <form @submit="Comment($event,cmt.id,cmt.app_replyContent)">
+                                    <div class="form-group">
+                                    <textarea v-model="cmt.app_replyContent" class="form-control" rows="3"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Comment</button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!-- <div class="spinner-border m-5" role="status">
+                    <span class="sr-only">Loading...</span>
+                    </div> -->
+                    
+                </div>
+                </div>
+            </div>
+            <!-- UPDATE COMMENT  MODEL -->
+            <!-- <div class="modal modal-lg fade " id="updateModal" style="z-index: 10000;" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content bg-white">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel"><?=$data['lang']['edit']?> <?=$data['lang']['comment']?></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" id='update_form'>
+                            <input type="text" class="form-control" id="id_comment_update" hidden>
+                            <div class="mb-3">
+                            <label for="comment_update" class="col-form-label"><?=$data['lang']['comment']?>:</label>
+                            <textarea class="form-control" id="comment_update" rows="3"></textarea>
+                            </div>
+                    
+                            <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?=$data['lang']['close']?></button>
+                            <button type="submit" class="btn btn-primary" id="update_product"><?=$data['lang']['edit']?></button>
+                            </div>
+                        </form>
+                    </div>
+                    </div>
+                </div>
+            </div> -->
+            <!-- UPDATE COMMENT REPLY  MODEL -->
+            <!-- <div class="modal modal-lg fade " id="updateModal_Reply" style="z-index: 10000;" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content bg-white">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel"><?=$data['lang']['edit']?> <?=$data['lang']['reply']?> <?=$data['lang']['comment']?></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" id='update_form_reply'>
+                            <input type="text" class="form-control" id="id_comment_reply_update" hidden>
+                            <input type="text" class="form-control" id="current_id_comment_reply_update" hidden>
+                            <div class="mb-3">
+                            <label for="comment_reply_update" class="col-form-label"><?=$data['lang']['comment']?>:</label>
+                            <textarea class="form-control" id="comment_reply_update" rows="3"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?=$data['lang']['close']?></button>
+                            <button type="submit" class="btn btn-primary" id="update_product"><?=$data['lang']['edit']?></button>
+                            </div>
+                        </form>
+                    </div>
+                    </div>
+                </div>
+            </div> -->
+
         <div class="bg-light rounded pt-2 mt-3">
             <div class="row">
                 <h3 class="h3 w3-animate-opacity">Các sản phẩm có liên quan</h3>    

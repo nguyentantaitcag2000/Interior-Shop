@@ -75,6 +75,7 @@ onMounted(()=>{
                 <th>Ngày</th>
                 <th>Tình trạng</th>
                 <th>Giao hàng đến</th>
+                <th>Khách hàng</th>
                 <th>Tổng</th>
                 <th>Các thao tác</th>
                 </tr>
@@ -90,6 +91,7 @@ onMounted(()=>{
                 <td>{{ ord.bill.CreateDate }}</td>
                 <td>{{ ord.bill.bill_status.Name_BS }}</td>
                 <td>{{ ord.Address_O }}</td>
+                <td>{{ ord.Customer_Name }}</td>
                 <td>{{ LazyConvert.ToMoney(ord.bill.TotalMoneyCheckout)  }}</td>
                 <td>
                         <a @click="ChangeBillStatus($event,ord,2)" class="btn btn-success">Đã thanh toán</a>
