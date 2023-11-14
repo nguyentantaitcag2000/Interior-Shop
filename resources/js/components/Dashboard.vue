@@ -4,6 +4,8 @@ import {onMounted, ref, reactive} from 'vue'
 import {users,product,bill} from '../interface';
 import Dropdown from 'primevue/dropdown';
 import Chart from 'primevue/chart';
+import Skeleton from 'primevue/skeleton';
+
 
 interface Inventory{
     products:product[],
@@ -35,6 +37,10 @@ const chartData_SoLuongNguoiDatHang = ref();
 const chartOptions_SoLuongNguoiDatHang = ref();
 const chartDataFromAPI = ref([]);
 const chartDataFromAPI_SoLuongNguoiDatHang = ref([]);
+const chartDataFromAPI_Bill = ref([]);
+const chartData_Bill = ref();
+const chartOptions_Bill = ref();
+
 const setChartData = () => {
     let ngayOrThangOrNam = "";
     if(selectedFilter.value.code == "1")
@@ -122,41 +128,6 @@ const setChartData_SoLuongNguoiDatHang = () => {
         ]
     };
 };
-// const setChartOptions_SoLuongNguoiDatHang = () => {
-//     const documentStyle = getComputedStyle(document.documentElement);
-//     const textColor = documentStyle.getPropertyValue('--text-color');
-//     const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
-//     const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
-
-//     return {
-//         plugins: {
-//             legend: {
-//                 labels: {
-//                     color: textColor
-//                 }
-//             }
-//         },
-//         scales: {
-//             x: {
-//                 ticks: {
-//                     color: textColorSecondary
-//                 },
-//                 grid: {
-//                     color: surfaceBorder
-//                 }
-//             },
-//             y: {
-//                 beginAtZero: true,
-//                 ticks: {
-//                     color: textColorSecondary
-//                 },
-//                 grid: {
-//                     color: surfaceBorder
-//                 }
-//             }
-//         }
-//     };
-// }
 const setChartOptions_SoLuongNguoiDatHang = () => {
     const documentStyle = getComputedStyle(document.documentElement);
     const textColor = documentStyle.getPropertyValue('--text-color');
@@ -194,6 +165,38 @@ const setChartOptions_SoLuongNguoiDatHang = () => {
                 },
                 grid: {
                     color: surfaceBorder
+                }
+            }
+        }
+    };
+};
+
+
+const setChartData_Bill = () => {
+    const documentStyle = getComputedStyle(document.body);
+
+    return {
+        labels: Object.keys(chartDataFromAPI_Bill.value),
+        datasets: [
+            {
+                data: Object.values(chartDataFromAPI_Bill.value),
+                backgroundColor: [documentStyle.getPropertyValue('--blue-500'), documentStyle.getPropertyValue('--yellow-500'), documentStyle.getPropertyValue('--green-500'), documentStyle.getPropertyValue('--red-500')],
+                hoverBackgroundColor: [documentStyle.getPropertyValue('--blue-400'), documentStyle.getPropertyValue('--yellow-400'), documentStyle.getPropertyValue('--green-400')]
+            }
+        ]
+    };
+};
+
+const setChartOptions_Bill = () => {
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--text-color');
+
+    return {
+        plugins: {
+            legend: {
+                labels: {
+                    usePointStyle: true,
+                    color: textColor
                 }
             }
         }
@@ -238,6 +241,12 @@ const InventoryExport = ()=>{
 
 }
 onMounted(()=>{
+    
+    axios.post('/api/bill/thongke').then(res=>{
+        chartDataFromAPI_Bill.value = res.data;
+        chartData_Bill.value = setChartData_Bill();
+        chartOptions_Bill.value = setChartOptions_Bill();
+    });
     axios.get('/api/users').then(res=>{
         users.value = res.data;
     });
@@ -329,7 +338,15 @@ onMounted(()=>{
                         </div>
                     </div>
                 </div>
+                
 
+            </div>
+            <div class="row mb-5">
+                <div class="d-flex flex-row justify-content-center w-100">
+                    <Skeleton v-if="!chartOptions_Bill" shape="circle" size="20rem"></Skeleton>
+                    <Chart v-else  type="pie" :data="chartData_Bill" :options="chartOptions_Bill" class="w-full md:w-30rem" />
+                </div>
+                
             </div>
             <div class="row" >
                 <div>

@@ -11,6 +11,9 @@ import Dropdown from 'primevue/dropdown';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 import Carousel from 'primevue/carousel';
+import Chatbot from './Chatbot.vue';
+import FileUpload, { FileUploadUploaderEvent } from 'primevue/fileupload';
+
 let myIndex = 0;
 const route = useRoute();
 const router = useRouter();
@@ -140,6 +143,41 @@ const loadProduct = () => {
         isSearching.value = false;
     });
 }
+async function chooseUploadImage(event: FileUploadUploaderEvent) {
+    const files = event.files as File[]; // Chuyển đổi sang kiểu mảng File
+
+    if (files.length > 0) {
+        const file = files[0];
+        const reader = new FileReader();
+        
+        try {
+            const blob = await fetch(URL.createObjectURL(file)).then((r) => r.blob());
+
+            reader.readAsDataURL(blob);
+
+            reader.onloadend = function () {
+                const base64data = reader.result;
+                const formData = new FormData();
+                formData.append("file", file);  // 'file' ở đây cần khớp với tên trường trên server
+
+                isSearching.value = true;
+                axios.post(`http://localhost:8001/image`, formData ).then(res=>{
+                    
+                    console.log(res.data.folders);
+                    
+                    axios.post('/api/getImagesSpecial', {names: res.data.folders.toString()}).then(res=>{
+                        products.value = res.data;
+                        isSearching.value = false;
+                    });
+                    
+                });
+                // Sử dụng base64data theo nhu cầu của bạn
+            };
+        } catch (error) {
+            console.error('Error fetching or reading the file:', error);
+        }
+    }
+}
 
 watch(()=> route.query, (oldVal,newVal)=>{
     loadProduct();
@@ -172,6 +210,8 @@ onMounted(()=>{
 
 
 <template>
+    <!-- <Chatbot></Chatbot> -->
+   
     <div v-if="search.by!='all'" class="w3-content w3-display-container w3-animate-right-08">
       <img class="mySlides" src="../../../public/images/1.png" style="width:100%">
       <img class="mySlides" src="../../../public/images/2.png" style="width:100%;display:none;">
@@ -219,12 +259,22 @@ onMounted(()=>{
                 </Carousel>
             </div>
         </div>
-        <div class="row mb-3 d-flex justify-content-end">
-            <Toast />
-            <Button icon="fas fa-filter"></Button>
-            <Dropdown v-model="filter_by" :options="options_filter" optionLabel="name"  placeholder="Sắp xếp theo" ></Dropdown>
-        </div>
+        <hr>
 
+        <div class="row mb-3 d-flex justify-content-between">
+            <Toast />
+            <div class="d-flex align-items-center">
+                <span class="mr-2">Tìm kiếm bằng hình ảnh</span>
+                <FileUpload mode="basic"   accept="image/*" customUpload @uploader="chooseUploadImage($event)" />
+            </div>
+            
+            <div>
+                <Button icon="fas fa-filter"></Button>
+                <Dropdown v-model="filter_by" :options="options_filter" optionLabel="name"  placeholder="Sắp xếp theo" ></Dropdown>
+            </div>
+            
+        </div>
+        <hr>
         <div class="row">
             <h3 v-if=" search.by == 'category' " class="h3 w3-animate-opacity">Sản phẩm trong danh mục <b>"{{ search.keyword }}"</b></h3>
             <h3 v-else-if=" search.by == 'all' " class="h3 w3-animate-opacity">Kết quả tìm kiếm cho <b>"{{ search.keyword }}"</b></h3>
@@ -256,43 +306,8 @@ onMounted(()=>{
         </div>
     </div>
 
-    <!-- <?php if(isset($data['Product_Suggestion'] )){ ?>
-    <div class="container bg-light rounded pt-2 mt-3">
-        <div class="row">
-            <h3 class="h3 w3-animate-opacity">Những sản phẩm liên quan khác</h3>
-        </div>
-        <div class="row w-100">
-            <?php foreach ($data['Product_Suggestion'] as $key => $value) {
-                $title = $value['Name_Product'];
-                if (strlen($value['Name_Product']) > 34) {
-                  $title = mb_substr($value['Name_Product'], 0, 34) . "...";
-                }
-                ?>
-               <div class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
-                    <div class="product-grid2">
-                        <div class="product-image2">
-                            <a href="/Home/Info/<?=$value['ID_Product']?>" target="_blank">
-                                <img class="pic-1" src="<?= $value['Avatar']?>">
-                            </a>
-                            <ul class="social">
-                                <li><a href="#" data-tip="Quick View"><i class="fa fa-eye"></i></a></li>
-                                <li><a href="#" data-tip="Add to Cart"><i class="fa fa-shopping-cart"></i></a></li>
-                            </ul>
-                            <a class="add-to-cart" href="">Add to cart</a>
-                        </div>
-                        <div class="product-content">
-                            <h3 class="title"><a href="#"><?=$title?></a></h3>
-                            <span class="price"><?=number_format($value['Price'],0) . ' đ'?></span>
-                        </div>
-                    </div>
-                </div>
-            <?php }?>
-
-
-        </div>
-    </div>
-    <?php }?> -->
+    
 
 </template>
 
-../interface2../interface2
+

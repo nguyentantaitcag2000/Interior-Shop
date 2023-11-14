@@ -63,6 +63,14 @@ class OrderController extends Controller
             $id_dimensions = request('idDimensionsBuyNow');
 
             $result = $this->shoppingCartRepository->store($id_user,$amount,$id_product,$id_color,$id_material,$id_dimensions);
+            if($result['status'] != 200)
+            {
+                return json_encode([
+                    'status' => 400,
+                    'message' => 'Order failed',
+                    'result' => $result
+                ]);
+            }
             $ID_SC = $result['ID_SC'];
             $array_insert_data_order_detail[] = [
                 'ID_SC' => $ID_SC,
@@ -125,6 +133,20 @@ class OrderController extends Controller
         ->whereHas('orderDetail.shoppingCart', function($query) use ($userId) {
             $query->where('ID_User', $userId);
         })
+        ->whereHas('bill.bill_status', function($query) use ($request) {
+            if($request->input('ID_BS') != 0)
+                $query->where('ID_BS', $request->input('ID_BS'));
+        })
+        ->orderBy('ID_Order','DESC')
+        ->get();
+
+        return $data;
+    }
+    public function showAll(Request $request)
+    {
+      
+        $data = Order::with(['orderDetail.shoppingCart','orderDetail.shoppingCart.cart_detail.product','bill.bill_status'])
+        ->whereHas('orderDetail.shoppingCart')
         ->whereHas('bill.bill_status', function($query) use ($request) {
             if($request->input('ID_BS') != 0)
                 $query->where('ID_BS', $request->input('ID_BS'));

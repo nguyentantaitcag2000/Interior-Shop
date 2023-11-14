@@ -7,6 +7,8 @@ import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
 import TabMenu from 'primevue/tabmenu';
 import { cart_tabs } from '../../tabs';
+import Skeleton from 'primevue/skeleton';
+
 const order = ref<order[]>();
 const router = useRouter();
 const totalMoney = ref(0);
@@ -31,7 +33,7 @@ onMounted(()=>{
     </div>
     <div class="p-3 bg-light mt-3 rounded" style="min-height: 100vh;">
         
-        <div v-for="ord in order">
+        <div v-if="order" v-for="ord in order">
             <div style="background-color: rgb(214, 214, 214);" class="p-3 mt-3 d-flex justify-content-between rounded">
                 <router-link :to="'/bill/' + ord.bill.ID_Bill">Đơn hàng #{{ ord.bill.ID_Bill }}</router-link>
                 <span>{{ ord.bill.CreateDate }}</span>
@@ -64,8 +66,49 @@ onMounted(()=>{
                 </div>
                 
             </form>
+
         </div>
-        
+        <div v-else class="border-round border-1 surface-border p-4 surface-card">
+                <ul class="m-0 p-0 list-none">
+                    <li class="mb-3">
+                        <div class="flex">
+                            <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
+                            <div class="align-self-center" style="flex: 1">
+                                <Skeleton width="100%" class="mb-2"></Skeleton>
+                                <Skeleton width="75%"></Skeleton>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <div class="flex">
+                            <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
+                            <div class="align-self-center" style="flex: 1">
+                                <Skeleton width="100%" class="mb-2"></Skeleton>
+                                <Skeleton width="75%"></Skeleton>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <div class="flex">
+                            <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
+                            <div class="align-self-center" style="flex: 1">
+                                <Skeleton width="100%" class="mb-2"></Skeleton>
+                                <Skeleton width="75%"></Skeleton>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="flex">
+                            <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
+                            <div class="align-self-center" style="flex: 1">
+                                <Skeleton width="100%" class="mb-2"></Skeleton>
+                                <Skeleton width="75%"></Skeleton>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
         
   
     </div>

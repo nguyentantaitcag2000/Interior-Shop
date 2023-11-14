@@ -23,6 +23,7 @@ import SelectButton from 'primevue/selectbutton';
 import Image from 'primevue/image';
 import Rating from 'primevue/rating';
 import Breadcrumb from 'primevue/breadcrumb';
+import Skeleton from 'primevue/skeleton';
 
 const route = useRoute();
 const router = useRouter();
@@ -32,6 +33,7 @@ const myProductRelative = ref<product[]>();
 const activeIndex = ref(1);
 const rating = ref(0);
 const tonKho = ref(0);
+const isLogin = ref(false);
 interface MyImage {
     itemImageSrc: string;
     thumbnailImageSrc: string;
@@ -102,9 +104,7 @@ const Comment = (event:Event,reply_to?:number,replyContent?:string) => {
 const visibleCount = computed(() => {
     return images.value.length > 3 ? 3 : images.value.length;
 });
-const ID_Color = ref<number>();
-const ID_Material= ref<number>();
-const ID_Dimensions=  ref<number>();
+
 const initForm = {
     ID_Product: -1,
     Amount: 1,
@@ -114,7 +114,7 @@ const initForm = {
 }
 
 let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
-watch([ID_Color,ID_Dimensions, ID_Material], (values: [number?, number?, number?]) => {
+watch([form.ID_Color,form.ID_Dimensions, form.ID_Material], (values: [number|null, number|null, number|null]) => {
     const [newColor, newDimensions, newMaterial] = values;
     console.log(newColor);
     console.log(newDimensions);
@@ -214,6 +214,7 @@ const BuyNow = () => {
 const isNotHaveColor = ()=>{
     if(myProduct.value?.detail_product_color.length == 0)
         return true;
+    console.log(myProduct.value?.detail_product_color);
     return myProduct.value?.detail_product_color.length == 1 && myProduct.value?.detail_product_color[0].ID_Color == 0;
 }
 const isNotHaveMaterial = ()=>{
@@ -276,18 +277,23 @@ onMounted(()=>{
             setCountCard(array.length);
         }
     });
+    axios.post('/api/checklogin').then(res => {
+        isLogin.value = res.data.isLogin;
+    });
     
 });
 </script>
 <template>
     <div class="p-5 mt-5 bg-light" style="border-radius: 25px;">
         <div class="row mb-5">
-            <Breadcrumb :home="home_breadcrumb" :model="items_Breadcrumb" />
+            <Breadcrumb v-if="items_Breadcrumb.length >0" :home="home_breadcrumb" :model="items_Breadcrumb" />
+            <Skeleton v-else height="2rem" class="mb-2"></Skeleton>
+
         </div>
         <div class="row w-100">
             <div class="col-lg-5">
                 <div class="p-3">
-                        <Galleria :value="images" :responsiveOptions="responsiveOptions" :numVisible="visibleCount" containerStyle="max-width: 640px">
+                        <Galleria v-if="myProduct" :value="images" :responsiveOptions="responsiveOptions" :numVisible="visibleCount" containerStyle="max-width: 640px">
                             <template #item="slotProps">
                                 <Image :src="slotProps.item.itemImageSrc" height="400"  :alt="slotProps.item.alt" :id="'product-avt'"  preview />
                             </template>
@@ -295,6 +301,12 @@ onMounted(()=>{
                                 <img :src="slotProps.item.thumbnailImageSrc" width="100" height="100" :alt="slotProps.item.alt" />
                             </template>
                         </Galleria>
+                        <div v-else>
+                            <Skeleton height="20rem" class="mb-2"></Skeleton>
+                            <Skeleton height="10rem" class="mb-2"></Skeleton>
+
+                        </div>
+
                     
                     <!-- <div class="row border">
                         <div class="d-flex justify-content-center w3-animate-zoom">
@@ -310,16 +322,20 @@ onMounted(()=>{
             <div class="col-lg-7 w3-animate-bottom">
                 <div class="pl-3 ml-3">
                     <input value="<?=$data['Product']['ID_Product']?>" id="product_id" hidden>
-                    <h1>{{ myProduct?.Name_Product }}</h1>
-                    <p class="text-danger h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price) }}</strong></p>
+                    <h1 v-if="myProduct">{{ myProduct?.Name_Product }}</h1>
+                    <Skeleton v-else height="4rem" class="mb-2"></Skeleton>
+
+                    <p v-if="myProduct" class="text-danger h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price) }}</strong></p>
+                    <Skeleton v-else height="2rem" class="mb-2"></Skeleton>
+
                     <hr>
-                    <div>
+                    <div v-if="myProduct">
                         <div>
                             <span><b>Màu sắc:</b></span>
                             <span v-if="isNotHaveColor()">
                                 {{ ' Không xác định' }}
                             </span>
-                            <SelectButton v-else v-model="ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  />
+                            <SelectButton v-else v-model="form.ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  />
                         </div>
                         
                         <div class="mt-4">
@@ -327,14 +343,14 @@ onMounted(()=>{
                             <span v-if="isNotHaveMaterial()">
                                 {{ ' Không xác định' }}
                             </span>
-                            <SelectButton v-else v-model="ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />
+                            <SelectButton v-else v-model="form.ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />
                         </div>
                         <div class="mt-4">
                             <span><b>Kích thước:</b></span>
                             <span v-if="isNotHaveSize()">
                                 {{ ' Không xác định' }}
                             </span>
-                            <SelectButton v-else v-model="ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  />
+                            <SelectButton v-else v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  />
                         </div>
 
                         <div class="row g-3 align-items-center mt-4">
@@ -365,7 +381,8 @@ onMounted(()=>{
                             Tồn kho: {{ tonKho }}
                         </div>
                     </div>
-                
+                    <Skeleton v-else height="20rem" class="mb-2"></Skeleton>
+
                 </div>
                     
             </div>
@@ -390,25 +407,17 @@ onMounted(()=>{
 
                 <div id="section1" class="container-fluid bg-light text-dark" style="padding:100px 20px;">
                 <h1>Thông tin sản phẩm</h1>
-                <div>
+                <div v-if="myProduct">
                     {{ myProduct?.Description }}
                 </div>
+                <Skeleton v-else height="20rem" class="mb-2"></Skeleton>
+
                 </div>
 
-                <!-- <div id="section2" class="container-fluid bg-warning" style="padding:100px 20px;">
-                <h1>Section 2</h1>
-                <p>Try to scroll this section and look at the navigation bar while scrolling! Try to scroll this section and look at the navigation bar while scrolling!</p>
-                <p>Try to scroll this section and look at the navigation bar while scrolling! Try to scroll this section and look at the navigation bar while scrolling!</p>
-                </div>
-
-                <div id="section3" class="container-fluid bg-secondary text-white" style="padding:100px 20px;">
-                <h1>Section 3</h1>
-                <p>Try to scroll this section and look at the navigation bar while scrolling! Try to scroll this section and look at the navigation bar while scrolling!</p>
-                <p>Try to scroll this section and look at the navigation bar while scrolling! Try to scroll this section and look at the navigation bar while scrolling!</p>
-                </div> -->
+              
             </div>
             <div class="card flex justify-content-center">
-                <Rating v-model="rating">
+                <Rating v-if="isLogin" v-model="rating">
                     <template #cancelicon>
                         <img src="https://primefaces.org/cdn/primevue/images/rating/cancel.png" height="24" width="24" />
                     </template>
@@ -425,7 +434,8 @@ onMounted(()=>{
             <div class="card mb-3 w-100">
                 <input type="text" id="offset_comment" value="0" hidden>
                 <div class="card-header h4">Comments</div>
-                <div class="card-body">
+                <p v-if="isLogin == false" class="p-3 h6">Vui lòng đăng nhập để tham gia comment !</p>
+                <div v-else class="card-body">
                     <form @submit="Comment($event)">
                         <div class="form-group">
                             <textarea v-model="comment_content" class="form-control" rows="3"></textarea>
@@ -524,57 +534,6 @@ onMounted(()=>{
                 </div>
                 </div>
             </div>
-            <!-- UPDATE COMMENT  MODEL -->
-            <!-- <div class="modal modal-lg fade " id="updateModal" style="z-index: 10000;" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content bg-white">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"><?=$data['lang']['edit']?> <?=$data['lang']['comment']?></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="POST" id='update_form'>
-                            <input type="text" class="form-control" id="id_comment_update" hidden>
-                            <div class="mb-3">
-                            <label for="comment_update" class="col-form-label"><?=$data['lang']['comment']?>:</label>
-                            <textarea class="form-control" id="comment_update" rows="3"></textarea>
-                            </div>
-                    
-                            <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?=$data['lang']['close']?></button>
-                            <button type="submit" class="btn btn-primary" id="update_product"><?=$data['lang']['edit']?></button>
-                            </div>
-                        </form>
-                    </div>
-                    </div>
-                </div>
-            </div> -->
-            <!-- UPDATE COMMENT REPLY  MODEL -->
-            <!-- <div class="modal modal-lg fade " id="updateModal_Reply" style="z-index: 10000;" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content bg-white">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"><?=$data['lang']['edit']?> <?=$data['lang']['reply']?> <?=$data['lang']['comment']?></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="POST" id='update_form_reply'>
-                            <input type="text" class="form-control" id="id_comment_reply_update" hidden>
-                            <input type="text" class="form-control" id="current_id_comment_reply_update" hidden>
-                            <div class="mb-3">
-                            <label for="comment_reply_update" class="col-form-label"><?=$data['lang']['comment']?>:</label>
-                            <textarea class="form-control" id="comment_reply_update" rows="3"></textarea>
-                            </div>
-                            <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?=$data['lang']['close']?></button>
-                            <button type="submit" class="btn btn-primary" id="update_product"><?=$data['lang']['edit']?></button>
-                            </div>
-                        </form>
-                    </div>
-                    </div>
-                </div>
-            </div> -->
-
         <div class="bg-light rounded pt-2 mt-3">
             <div class="row">
                 <h3 class="h3 w3-animate-opacity">Các sản phẩm có liên quan</h3>    
