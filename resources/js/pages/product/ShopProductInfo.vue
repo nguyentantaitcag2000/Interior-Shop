@@ -32,7 +32,7 @@ const myComment = ref<comment[]>();
 const myProductRelative = ref<product[]>();
 const activeIndex = ref(1);
 const rating = ref(0);
-const tonKho = ref(0);
+const tonKho = ref(-1);
 const isLogin = ref(false);
 interface MyImage {
     itemImageSrc: string;
@@ -117,7 +117,7 @@ let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
 const checkingAmount = ref(false);
 function CheckAmount()
 {
-    if(form.ID_Color && form.ID_Dimensions && form.ID_Material) {
+    if((isNotHaveColor() || form.ID_Color) && (isNotHaveSize() || form.ID_Dimensions) && (isNotHaveMaterial() || form.ID_Material)) {
         let myform = {
             ID_Color:form.ID_Color,
             ID_Material:form.ID_Material,
@@ -268,6 +268,12 @@ const loadProduct = () => {
             myProductRelative.value = res.data;
         });
         loadComment();
+
+        //Nếu như mà trường hợp sản phẩm không có màu sắc chất liệu hay size nào hết sẽ kiểm tra thử xem có tồn tại sản phẩm tồn nào không
+        if(isNotHaveSize() && isNotHaveColor() && isNotHaveMaterial())
+        {
+            CheckAmount();
+        }
     });
 }
 onMounted(()=>{
@@ -382,6 +388,7 @@ onMounted(()=>{
                         </div>
                         <div class="row mt-3">
                             <b class="mr-2">Tồn kho:</b> <Badge v-if="checkingAmount" value="Checking..."></Badge>
+                                     <Badge v-else-if="tonKho == -1" value="Chưa xác định"></Badge>
                                      <Badge v-else :value="tonKho"></Badge>
                         </div>
                     </div>
