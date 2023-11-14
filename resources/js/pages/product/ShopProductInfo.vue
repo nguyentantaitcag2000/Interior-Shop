@@ -114,20 +114,16 @@ const initForm = {
 }
 
 let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
-watch([form.ID_Color,form.ID_Dimensions, form.ID_Material], (values: [number|null, number|null, number|null]) => {
-    const [newColor, newDimensions, newMaterial] = values;
-    console.log(newColor);
-    console.log(newDimensions);
-    console.log(newMaterial);
-    console.log(myProduct.value?.ID_Product);
-    if(newColor && newDimensions && newMaterial) {
-        let form = {
-            ID_Color:newColor,
-            ID_Material:newMaterial,
-            ID_D:newDimensions,
+function CheckAmount()
+{
+    if(form.ID_Color && form.ID_Dimensions && form.ID_Material) {
+        let myform = {
+            ID_Color:form.ID_Color,
+            ID_Material:form.ID_Material,
+            ID_D:form.ID_Dimensions,
             ID_Product: myProduct.value?.ID_Product
         }
-        axios.post('/api/product/amount',form).then(res=>{
+        axios.post('/api/product/amount',myform).then(res=>{
             console.log(res.data);
 
             if(res.data.status == 200)
@@ -140,7 +136,11 @@ watch([form.ID_Color,form.ID_Dimensions, form.ID_Material], (values: [number|nul
             }
         });
     }
-});
+}
+// Đoạn watch này không hoạt động trên MacOs (nó không trigger khi thay đổi giá trị)
+// watch([form.ID_Color,form.ID_Dimensions, form.ID_Material], (values: [number|null, number|null, number|null]) => {
+//     CheckAmount();
+// });
 const changeAmount = (event:Event) => {
     let button = event.target as HTMLElement;
 
@@ -335,7 +335,7 @@ onMounted(()=>{
                             <span v-if="isNotHaveColor()">
                                 {{ ' Không xác định' }}
                             </span>
-                            <SelectButton v-else v-model="form.ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  />
+                            <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  />
                         </div>
                         
                         <div class="mt-4">
@@ -343,14 +343,14 @@ onMounted(()=>{
                             <span v-if="isNotHaveMaterial()">
                                 {{ ' Không xác định' }}
                             </span>
-                            <SelectButton v-else v-model="form.ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />
+                            <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />
                         </div>
                         <div class="mt-4">
                             <span><b>Kích thước:</b></span>
                             <span v-if="isNotHaveSize()">
                                 {{ ' Không xác định' }}
                             </span>
-                            <SelectButton v-else v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  />
+                            <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  />
                         </div>
 
                         <div class="row g-3 align-items-center mt-4">
