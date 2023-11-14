@@ -43,4 +43,21 @@ class AuthController extends Controller
             'message' => 'Đăng nhập thành công!'
         ]);
     }
+    public function checklogin()
+    {
+        if(session()->has('email'))
+        {
+            return json_encode([
+                'status' => 200,
+                'isLogin' => true
+            ]);
+        }
+        else
+        {
+            return json_encode([
+                'status' => 200,
+                'isLogin' => false
+            ]);
+        }
+    }
 }

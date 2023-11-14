@@ -41,6 +41,7 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/shoppingcart/updates', [ShoppingCartController::class, 'updates']);
     Route::post('/order', [OrderController::class, 'store']);
     Route::post('/order/get', [OrderController::class, 'show']);
+    Route::post('/order/getAll', [OrderController::class, 'showAll']);
     Route::get('/bill/processing', [BillController::class, 'processing']);
 
     Route::get('/bill/{bill}', [BillController::class, 'show']);
@@ -50,11 +51,15 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/InsertProduct', [ProductController::class, 'store']);
     Route::post('/ImportHistory', [ImportHistoryController::class, 'store']);
     Route::post('/comment', [CommentController::class, 'store']);
+    Route::post('/checklogin', [AuthController::class, 'checklogin']);
+    Route::post('/getImagesSpecial', [ProductController::class, 'getImagesSpecial']);
+
 });
 //POST
 Route::post('/products/top10', [ProductController::class, 'top10']);
 Route::post('/product/tongDoanhSo', [ProductController::class, 'tongDoanhSo']);
 Route::post('/product/tongNguoiDatHang', [ProductController::class, 'tongNguoiDatHang']);
+Route::post('/bill/thongke', [BillController::class, 'thongke']);
 
 Route::post('/product/amount', [ProductController::class,'amount']);
 Route::get('/filter/{id}', [ProductController::class,'filter']);

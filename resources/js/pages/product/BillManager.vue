@@ -50,7 +50,7 @@ const ChangeBillStatus = (event:Event, ord:order, id_bs:number) => {
 
 }
 const loadBill = () =>{
-    axios.post('/api/order/get',{ID_BS: route.params.id}).then(res=>{
+    axios.post('/api/order/getAll',{ID_BS: route.params.id}).then(res=>{
         order.value = res.data;
         console.log(res.data);
     });

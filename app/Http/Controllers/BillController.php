@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\bill;
 use App\Repositories\Auth\AuthRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BillController extends Controller
 {
@@ -82,5 +83,52 @@ class BillController extends Controller
     {
         $data  = bill::where('ID_BS', 1)->get();
         return $data;
+    }
+    public function thongke()
+    {
+        $totalSalesData = [];
+        $status = 1;
+        $arrayStatus = [
+            'Đang xử lý',
+            'Đã thanh toán',
+            'Đang vận chuyển',
+            'Đã hủy đơn',
+        ];
+        $total = DB::select("
+            SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS total
+            FROM bill
+            WHERE ID_BS = $status;
+        ")[0]->total;
+
+        $totalSalesData[$arrayStatus[$status-1]] = $total;
+
+        $status = 2;
+        $total = DB::select("
+            SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS total
+            FROM bill
+            WHERE ID_BS = $status;
+        ")[0]->total;
+
+        $totalSalesData[$arrayStatus[$status-1]] = $total;
+
+
+        $status = 3;
+        $total = DB::select("
+            SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS total
+            FROM bill
+            WHERE ID_BS = $status;
+        ")[0]->total;
+
+        $totalSalesData[$arrayStatus[$status-1]] = $total;
+
+        $status = 4;
+        $total = DB::select("
+            SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS total
+            FROM bill
+            WHERE ID_BS = $status;
+        ")[0]->total;
+
+        $totalSalesData[$arrayStatus[$status-1]] = $total;
+        return $totalSalesData;
     }
 }

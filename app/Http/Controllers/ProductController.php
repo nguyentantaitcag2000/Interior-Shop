@@ -170,6 +170,22 @@ class ProductController extends Controller
     {
         //
     }
+    public function getImagesSpecial(Request $request)
+    {
+        $names = $request->input('names'); // Có dạng product32,product33,product44
+        $nameArray = explode(',', $names);
+
+        // Sử dụng Eloquent để truy vấn cơ sở dữ liệu và lấy thông tin Avatar
+        $products = Product::where(function ($query) use ($nameArray) {
+            foreach ($nameArray as $name) {
+                $query->orWhere('Avatar', 'LIKE', "%{$name}%");
+            }
+        })->get();
+
+        // Nếu bạn muốn trả về JSON response, bạn có thể sử dụng hàm response
+        return $products;
+    }
+
     public function filter(int $id)
     {
         
