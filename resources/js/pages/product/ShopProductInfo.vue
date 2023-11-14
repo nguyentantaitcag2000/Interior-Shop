@@ -24,7 +24,7 @@ import Image from 'primevue/image';
 import Rating from 'primevue/rating';
 import Breadcrumb from 'primevue/breadcrumb';
 import Skeleton from 'primevue/skeleton';
-
+import Badge from 'primevue/badge';
 const route = useRoute();
 const router = useRouter();
 const myProduct = ref<product>();
@@ -114,6 +114,7 @@ const initForm = {
 }
 
 let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
+const checkingAmount = ref(false);
 function CheckAmount()
 {
     if(form.ID_Color && form.ID_Dimensions && form.ID_Material) {
@@ -123,8 +124,10 @@ function CheckAmount()
             ID_D:form.ID_Dimensions,
             ID_Product: myProduct.value?.ID_Product
         }
+        checkingAmount.value = true;
         axios.post('/api/product/amount',myform).then(res=>{
             console.log(res.data);
+            checkingAmount.value = false;
 
             if(res.data.status == 200)
             {
@@ -378,7 +381,8 @@ onMounted(()=>{
                             
                         </div>
                         <div class="row mt-3">
-                            Tồn kho: {{ tonKho }}
+                            <b class="mr-2">Tồn kho:</b> <Badge v-if="checkingAmount" value="Checking..."></Badge>
+                                     <Badge v-else :value="tonKho"></Badge>
                         </div>
                     </div>
                     <Skeleton v-else height="20rem" class="mb-2"></Skeleton>
