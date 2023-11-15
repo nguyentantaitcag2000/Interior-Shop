@@ -20,10 +20,8 @@ import InputNumber from 'primevue/inputnumber';
 import Dropdown from "primevue/dropdown";
 import Skeleton from 'primevue/skeleton';
 
-interface shoppingCartCustom extends shoppingCart{
-    ID_Color:number
-}
-const carts = ref<shoppingCartCustom[]>();
+
+const carts = ref<shoppingCart[]>();
 const router = useRouter();
 const totalMoney = ref(0);
 const colors = ref([]);
@@ -34,6 +32,18 @@ const calcMoney = ()=>{
     });
     totalMoney.value = total;
 }
+const totalMoneyAfterSaleOff = computed(()=>{
+    let totalMoney = 0;
+    if(carts.value)
+    {
+        carts.value!.forEach((cart: shoppingCart) => {
+            totalMoney += cart.cart_detail[0].product.Price_SaleOff * cart.cart_detail[0].Amount_CD;
+        });
+    }
+
+    
+    return totalMoney;
+})
 const selectedColor = computed(()=>{
 });
 const checkout = () => {
@@ -56,7 +66,7 @@ const checkout = () => {
         }
     });
 }
-const removeCart = (event:Event,cart:shoppingCartCustom)=>{
+const removeCart = (event:Event,cart:shoppingCart)=>{
     event.preventDefault();
     LazyCodet.AlertProcessing({
         alertMessage: "Bạn có chắc chắn muốn xóa ?",
@@ -81,7 +91,7 @@ const removeCart = (event:Event,cart:shoppingCartCustom)=>{
     });
     
 }
-const isHaveColor  = (ca:shoppingCartCustom) => {
+const isHaveColor  = (ca:shoppingCart) => {
     if(ca.cart_detail[0].product.detail_product_color.length > 0)
     {
         if(ca.cart_detail[0].product.detail_product_color.length == 1)
@@ -99,7 +109,7 @@ watch(()=>carts, (oldVal, newVal) => {
 }, { deep: true });
 onMounted(()=>{
     axios.get('/api/shoppingcart').then(res=>{
-        let result:shoppingCartCustom[]  = res.data.object;
+        let result:shoppingCart[]  = res.data.object;
         //Đem cái ID_Color ra ngoài cùng cấp với các thuộc tính của result
         let myarray = result.map(cart=>{
             return {
@@ -141,7 +151,13 @@ onMounted(()=>{
                     </div>
                     <div v-else class="col-sm-2 d-flex align-items-center "></div>
                     <div class="col-sm-2 d-flex align-items-center ">
-                        <span class="origin">{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price) }}</span>
+                        <div v-if="ca.cart_detail[0].product.detail_sale_of_product.length>0">
+                            <del class="origin">{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price) }}</del>
+                            <br>
+                            <span class="origin">{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price_SaleOff) }}</span>
+                        </div>
+                        
+                        <span v-else class="origin">{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price) }}</span>
                     </div>
                     <div class="col-sm-1 d-flex align-items-center pb-4">
                         <div style="width:50%">
@@ -206,7 +222,7 @@ onMounted(()=>{
         <div v-else class="row bottom-0 bg-light flex-grow-1 container p-3">
             <div class="col-sm-3">
                 <span>Tổng thanh toán:</span>
-                <span id="total_money">{{ LazyConvert.ToMoney(totalMoney) }}</span>
+                <span id="total_money">{{ LazyConvert.ToMoney(totalMoneyAfterSaleOff) }}</span>
             </div>
             <div class="col-sm-1,2">
                 <a class="btn btn-success" @click="checkout">Thanh toán</a>

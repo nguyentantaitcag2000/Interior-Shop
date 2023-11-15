@@ -1,8 +1,8 @@
 version: '2'
 services:
   webserver: 
-    # build: .
-    image: nguyentantaitcag2000/interior-shop:v1.0
+    build: .
+    # image: nguyentantaitcag2000/interior-shop:v1.0
     ports:
       - '8000:80' 
       - '5173:5173' 
@@ -13,6 +13,8 @@ services:
       - ./apache.conf:/etc/apache2/sites-available/000-default.conf 
     links:
       - db 
+    environment: 
+      XDEBUG_MODE: develop,debug
     networks:
       - laravel
   db: 

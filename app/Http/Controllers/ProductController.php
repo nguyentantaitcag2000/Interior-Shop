@@ -40,7 +40,7 @@ class ProductController extends Controller
     public function index($by,$keyword)
     {
         $query = Product::select()
-            ->with(['category','dimensions','detailProductImage','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
+            ->with(['category','dimensions','detailProductImage','detailSaleOfProduct','detailSaleOfProduct.saleOff','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
             ,'detailProductMaterial.material',
             'detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
             ,'detailProductColor.color']);
@@ -58,7 +58,19 @@ class ProductController extends Controller
         
         $products = $query->orderByDesc('product.ID_Product')
             ->get();
-      
+        // Tính số tiền đã được giảm giá nếu có
+        foreach ($products as $key => $product) {
+            $price = $product->Price;
+            if($product->detailSaleOfProduct)
+            {
+                foreach ($product->detailSaleOfProduct as $key2 => $detail_sale) {
+                    $price -= ($product->Price * $detail_sale->saleOff->Discount_Percent_SO/100);
+                }
+            }
+            $products[$key]->Price_SaleOff =  $price ; 
+            
+        }
+        
         return $products;
     }
 
@@ -158,9 +170,22 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        return $this->getRelates(Product::query()) 
+        $product = $this->getRelates(Product::query()) 
         ->where('ID_Product', $id)
         ->first();
+        // Tính số tiền đã được giảm giá nếu có
+  
+            $price = $product->Price;
+            if($product->detailSaleOfProduct)
+            {
+                foreach ($product->detailSaleOfProduct as $key2 => $detail_sale) {
+                    $price -= ($product->Price * $detail_sale->saleOff->Discount_Percent_SO/100);
+                }
+            }
+            $product->Price_SaleOff =  $price ; 
+            
+        
+        return $product;
     }
 
     /**
@@ -533,6 +558,8 @@ private function getRelates($table)
         return $table->with('detailProductImage')
         ->with('category')
         ->with('dimensions')
+        ->with('detailSaleOfProduct')
+        ->with('detailSaleOfProduct.saleOff')
         ->with(['detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
             ,'detailProductMaterial.material'])
         ->with(['detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
@@ -563,7 +590,7 @@ private function getRelates($table)
                 'ID_Material' => $array_id_materials[$i]
             ];
         }
-        DetailProductMaterial::where('ID_Product')->delete();
+        DetailProductMaterial::where('ID_Product',$productID)->delete();
         DetailProductMaterial::insert($materialsToInsert);
     }
     private function insertDetailColor($array_id_colors,$productID)

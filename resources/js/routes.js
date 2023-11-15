@@ -16,8 +16,15 @@ export default [
     {
         path: '/admin/category',
         name: 'admin.category',
-        component: () => {'./pages/category/ListCategory.vue'},
+        component: ()=> import('./pages/category/ListCategory.vue'),
         meta: { title: 'Danh mục' }
+
+    },
+    {
+        path: '/admin/saleoff',
+        name: 'admin.saleoff',
+        component: ()=> import('./pages/saleoff/SaleOff.vue'),
+        meta: { title: 'Sale Off' }
 
     },
     {

@@ -13,6 +13,7 @@ class bill extends Model
     public $timestamps = false;
     protected $fillable = [
         'TotalMoney',
+        'TotalMoneyAfterSaleOff',
         'VAT_rate',
         'VAT_amount',
         'TotalMoneyCheckout',

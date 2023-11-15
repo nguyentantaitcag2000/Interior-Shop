@@ -21,6 +21,7 @@ export interface shipMethod{
     Name_SM:string
 }
 export interface shoppingCart{
+    ID_Color:number,
     ID_User:number,
     ID_SC:number,
     ID_CS:number,
@@ -55,6 +56,7 @@ export interface billFull{
     "ID_Bill": number,
     "CreateDate": string,
     "TotalMoney": number,
+    "TotalMoneyAfterSaleOff": number,
     "VAT_rate": number,
     "VAT_amount": number,
     "TotalMoneyCheckout": number,
@@ -77,6 +79,13 @@ export interface dimensions{
     ID_D:number,
     Name_D:string,
     ID_Product:number,
+}
+export interface SaleOff {
+    ID_SO?: string,
+    name:string,
+    percent:number,
+    startTimestamp: number,
+    endTimestamp: number,
 }
 export interface comment{
     id:number,
@@ -102,6 +111,8 @@ export interface product{
     detail_product_image: detailProductImage[]
     detail_product_material: detailProductMaterial[]
     detail_product_color: detailProductColor[]
+    detail_sale_of_product: detailSaleOfProduct[]
+    Price_SaleOff: number
 }
 export interface orderDetail{
     ID_Order:number,
@@ -138,6 +149,10 @@ export interface detailProductMaterial{
 export interface detailProductImage{
     ID_Product:number|null,
     Image:string
+}
+export interface detailSaleOfProduct{
+    ID_Product:number|null,
+    ID_SO:string
 }
 export interface importHistoryDetail{
     ID_Product:number,

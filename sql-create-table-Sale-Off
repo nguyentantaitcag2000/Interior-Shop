@@ -1,0 +1,18 @@
+CREATE TABLE Sale_Off(
+	ID_SO INT AUTO_INCREMENT PRIMARY KEY,
+    Name_SO VARCHAR(255) NOT NULL,
+    Description_SO TEXT,
+    Discount_Percent double NOT NULL,
+    Start_Date TimeStamp DEFAULT CURRENT_TIMESTAMP,
+    End_Date Timestamp NULL DEFAULT NULL);
+
+    CREATE TABLE Detail_SaleOf_Product(
+        ID_SO INT NOT NULL,
+        ID_Product INT NOT NULL
+    );
+    
+ALTER TABLE Detail_SaleOf_Product ADD CONSTRAINT fk_asdkjasd FOREIGN KEY(ID_SO) REFERENCES Sale_Off(ID_SO) ON DELETE CASCADE;
+ALTER TABLE Detail_SaleOf_Product ADD CONSTRAINT fk_asdk123d FOREIGN KEY(ID_Product) REFERENCES Product(ID_Product) ON DELETE CASCADE;
+
+################################
+ALTER TABLE bill ADD TotalMoneyAfterSaleOff INT 

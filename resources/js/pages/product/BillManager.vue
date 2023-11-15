@@ -85,7 +85,9 @@ onMounted(()=>{
             <tr v-for="ord in order">
                 <td>
                     <div class="form-check">
-                    <label class="form-check-label" for="vehicle1">#{{ ord.bill.ID_Bill }}</label>
+                    <label class="form-check-label" for="vehicle1">
+                        <a :href="'/bill/' + ord.bill.ID_Bill" target="_blank">#{{ ord.bill.ID_Bill }}</a>
+                        </label>
                     </div>
                 </td>
                 <td>{{ ord.bill.CreateDate }}</td>

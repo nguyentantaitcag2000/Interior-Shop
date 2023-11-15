@@ -5,6 +5,7 @@ use App\Http\Controllers\BillController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ColorController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DetailSaleOfProductController;
 use App\Http\Controllers\ImportHistoryController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MethodOfPaymentController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\ShoppingCartController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SaleOffController;
 use App\Http\Controllers\ShipMethodController;
 
 /*
@@ -53,6 +55,10 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/comment', [CommentController::class, 'store']);
     Route::post('/checklogin', [AuthController::class, 'checklogin']);
     Route::post('/getImagesSpecial', [ProductController::class, 'getImagesSpecial']);
+    Route::post('/createSaleOff', [SaleOffController::class, 'store']);
+    Route::post('/updateSaleOff/{id}', [SaleOffController::class, 'update']);
+    Route::post('/showSales', [SaleOffController::class, 'index']);
+    Route::post('/UpdateDetailSale', [DetailSaleOfProductController::class, 'update']);
 
 });
 //POST
@@ -73,6 +79,7 @@ Route::post('/UpdateCategory/{id}', [CategoryController::class, 'update']);
 Route::post('/UpdateProduct/{id}', [ProductController::class, 'update']);
 Route::delete('/delete/category/{id}', [CategoryController::class, 'destroy']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+Route::delete('/sales/{id}', [SaleOffController::class, 'destroy']);
 //GET
 Route::get('/products/{by}/{keyword}', [ProductController::class, 'index']);
 

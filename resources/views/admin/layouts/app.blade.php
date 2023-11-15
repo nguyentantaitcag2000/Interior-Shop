@@ -204,6 +204,14 @@
                                 </p>
                             </router-link>
                         </li>
+                        <li  class="nav-item">
+                            <router-link to="/admin/saleoff" active-class="active" class="nav-link">
+                                <img width="24" src="/sale.png" />
+                                <p>
+                                    Khuyến mãi
+                                </p>
+                            </router-link>
+                        </li>
                         
                         <li class="nav-item">
                             <a href="#" class="nav-link">

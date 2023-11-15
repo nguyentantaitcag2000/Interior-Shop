@@ -40,6 +40,7 @@ const form = reactive<FormState>({
     idMaterialBuyNow:null,
     idDimensionsBuyNow:null,
 });
+
 const methodOfPaymentList = ref<methodOfPayment[]>();
 const shipMethodList = ref<shipMethod[]>();
 const checkoutFinished = ref(false);
@@ -48,6 +49,7 @@ const carts = ref<shoppingCart[]>();
 const product = ref<product>();
 
 const total_money = ref(0);
+const total_money_after_saleoff = ref(0);
 const total_money_with_vat = ref(total_money.value * 8 / 100) ;
 const total_money_all = ref(total_money.value + total_money_with_vat.value);
 const SubmitForm = (event:Event)=>{
@@ -75,6 +77,7 @@ const isBuyNow = ()=>{
 }
 const calcMoney = ()=>{
     let total:number = 0;
+    let totalAfterSaleOff:number = 0;
     if(isBuyNow())
     {
         form.amountBuyNow = Number(route.params.amount); 
@@ -85,17 +88,23 @@ const calcMoney = ()=>{
 
         if (product.value && product.value.Price)
             total = Number(route.params.amount)  * product.value.Price;
+        if (product.value && product.value.Price_SaleOff)
+            totalAfterSaleOff = Number(route.params.amount)  * product.value.Price_SaleOff;
     }
     else
     {
         carts.value?.forEach(function(val){
             total += val.cart_detail[0].Amount_CD * val.cart_detail[0].product.Price;
         });
+        carts.value?.forEach(function(val){
+            totalAfterSaleOff += val.cart_detail[0].Amount_CD * val.cart_detail[0].product.Price_SaleOff;
+        });
     }
     
     total_money.value = total;
+    total_money_after_saleoff.value = totalAfterSaleOff;
     total_money_with_vat.value = total_money.value * 8 / 100;
-    total_money_all.value = total_money.value + total_money_with_vat.value;
+    total_money_all.value = total_money_after_saleoff.value + total_money_with_vat.value;
 }
 onMounted(()=>{
     if(isBuyNow())
@@ -215,7 +224,15 @@ onMounted(()=>{
                                 <td>{{ form.nameMaterial }}</td>
                                 <td>{{ form.nameDimensions }}</td>
                                 <td>{{ route.params.amount }}</td>
-                                <td>{{ LazyConvert.ToMoney(product?.Price) }}</td>
+                                <td>
+                                    <div v-if="product && product?.detail_sale_of_product.length > 0">
+                                        <del>{{ LazyConvert.ToMoney(product?.Price) }}</del>
+                                        <br>
+                                        <span>{{ LazyConvert.ToMoney(product?.Price_SaleOff) }}</span>
+                                    </div>
+                                    <div v-else>{{ LazyConvert.ToMoney(product?.Price) }}</div>
+                                    
+                                </td>
                             </tr>
                             <tr v-else v-for="ca in carts">
                                 <th scope="row">{{ ca.cart_detail[0].product.Name_Product }}</th>
@@ -223,12 +240,21 @@ onMounted(()=>{
                                 <td>{{ ca.cart_detail[0].material != null ? ca.cart_detail[0].material.Name_Material : '' }}</td>
                                 <td>{{ ca.cart_detail[0].dimensions != null ? ca.cart_detail[0].dimensions.Name_D : '' }}</td>
                                 <td>{{ ca.cart_detail[0].Amount_CD }}</td>
-                                <td>{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price) }}</td>
+                                <td>
+                                    <div v-if="ca.cart_detail[0].product.detail_sale_of_product.length > 0">
+                                        <del>{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price) }}</del>
+                                        <br>
+                                        <span>{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price_SaleOff) }}</span>
+                                    </div>
+                                    
+                                    <div v-else>{{ LazyConvert.ToMoney(ca.cart_detail[0].product.Price) }}</div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                     <hr>
                     <p>Tổng tiền đơn hàng <span class="price" style="color:black"><b>{{ LazyConvert.ToMoney(total_money) }}</b></span></p>
+                    <p v-if="total_money!=total_money_after_saleoff ">Tổng tiền đơn hàng sau khi áp dụng khuyến mãi <span class="price" style="color:black"><b>{{ LazyConvert.ToMoney(total_money_after_saleoff) }}</b></span></p>
                     <p>VAT  <span class="price" style="color:black"><b>8%</b></span></p>
                     <p>Tổng phí VAT<span class="price" style="color:black"><b>&nbsp; {{ LazyConvert.ToMoney(total_money_with_vat) }}</b></span></p>
                     <p>Tổng tiền thanh toán<span class="price" style="color:rgba(0, 106, 255, 1)"><b>&nbsp; {{ LazyConvert.ToMoney(total_money_all) }}</b></span></p>

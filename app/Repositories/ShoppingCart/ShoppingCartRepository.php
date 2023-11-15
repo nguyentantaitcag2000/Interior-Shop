@@ -13,14 +13,28 @@ use function PHPSTORM_META\map;
 class ShoppingCartRepository extends Repository implements ShoppingCartRepositoryInterface{
     public function getWith($id_status, $id_user)
     {
-        $data = ShoppingCart::with(['cart_detail.color','cart_detail.product.detailProductColor' => function($query) {
+        $carts = ShoppingCart::with(['cart_detail.color','cart_detail.product.detailSaleOfProduct','cart_detail.product.detailSaleOfProduct.saleOff','cart_detail.product.detailProductColor' => function($query) {
             $query->distinct()->with('color');
         },
         'cart_detail.material','cart_detail.dimensions'])
         ->where('ID_User',$id_user)
         ->where('ID_CS',$id_status)
                 ->get();
-        return $data;
+        // Tính số tiền đã được giảm giá nếu có
+        foreach ($carts as $key => $cart) {
+            $cardetail = $cart->cart_detail[0];
+            $product= $cardetail->product;
+            $price = $product->Price;
+            if($product->detailSaleOfProduct)
+            {
+                foreach ($product->detailSaleOfProduct as $key2 => $detail_sale) {
+                    $price -= ($product->Price * $detail_sale->saleOff->Discount_Percent_SO/100);
+                }
+            }
+            $product->Price_SaleOff =  $price ; 
+            
+        }
+        return $carts;
     }
     public function store($id_user, $amount, $id_product,$id_color,$id_material,$id_dimensions)
     {
