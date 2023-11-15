@@ -149,7 +149,7 @@ async function chooseUploadImage(event: FileUploadUploaderEvent) {
     if (files.length > 0) {
         const file = files[0];
         const reader = new FileReader();
-        
+
         try {
             const blob = await fetch(URL.createObjectURL(file)).then((r) => r.blob());
 
@@ -162,14 +162,14 @@ async function chooseUploadImage(event: FileUploadUploaderEvent) {
 
                 isSearching.value = true;
                 axios.post(`http://localhost:8001/image`, formData ).then(res=>{
-                    
+
                     console.log(res.data.folders);
-                    
+
                     axios.post('/api/getImagesSpecial', {names: res.data.folders.toString()}).then(res=>{
                         products.value = res.data;
                         isSearching.value = false;
                     });
-                    
+
                 });
                 // Sử dụng base64data theo nhu cầu của bạn
             };
@@ -211,7 +211,7 @@ onMounted(()=>{
 
 <template>
     <!-- <Chatbot></Chatbot> -->
-   
+
     <div v-if="search.by!='all'" class="w3-content w3-display-container w3-animate-right-08">
       <img class="mySlides" src="../../../public/images/1.png" style="width:100%">
       <img class="mySlides" src="../../../public/images/2.png" style="width:100%;display:none;">
@@ -236,7 +236,7 @@ onMounted(()=>{
     <div class="container bg-light rounded pt-2 mt-3 change-background" data-background="#f6d9d9">
 
         <div v-if="search.by=='_'" class="row mb-3">
-                <h3 class="h3 w3-animate-opacity">Sản phẩm bán chạy233234 <img width="50" src="/new.gif" /></h3>
+                <h3 class="h3 w3-animate-opacity">Sản phẩm bán chạy<img width="50" src="/new.gif" /></h3>
         </div>
         <div v-if="search.by=='_'" class="row mb-3">
             <div class="card">
@@ -267,12 +267,12 @@ onMounted(()=>{
                 <span class="mr-2">Tìm kiếm bằng hình ảnh</span>
                 <FileUpload mode="basic"   accept="image/*" customUpload @uploader="chooseUploadImage($event)" />
             </div>
-            
+
             <div>
                 <Button icon="fas fa-filter"></Button>
                 <Dropdown v-model="filter_by" :options="options_filter" optionLabel="name"  placeholder="Sắp xếp theo" ></Dropdown>
             </div>
-            
+
         </div>
         <hr>
         <div class="row">
@@ -306,7 +306,7 @@ onMounted(()=>{
         </div>
     </div>
 
-    
+
 
 </template>
 

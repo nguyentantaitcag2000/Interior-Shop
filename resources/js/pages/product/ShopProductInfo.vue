@@ -377,7 +377,7 @@ onMounted(()=>{
                         <div class="row mt-3">
                             <button class="btn btn-primary" @click="AddCart"><i class="fas fa-shopping-cart mr-2" ></i>Đặt vào giỏ hàng</button>
                         
-                            <button @click="BuyNow" class="btn btn-success ml-3" value="Mua ngay" type="submit" >Mua ngay</button>
+                            <button @click="BuyNow" class="btn btn-success ml-3" :disabled="tonKho == 0" value="Mua ngay" type="submit" >Mua ngay</button>
                             
                         </div>
                         <div class="row mt-3">
