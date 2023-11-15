@@ -236,7 +236,11 @@ onMounted(()=>{
     <div class="container bg-light rounded pt-2 mt-3 change-background" data-background="#f6d9d9">
 
         <div v-if="search.by=='_'" class="row mb-3">
+<<<<<<< HEAD
                 <h3 class="h3 w3-animate-opacity">Sản phẩm bán chạy<img width="50" src="/new.gif" /></h3>
+=======
+                <h3 class="h3 w3-animate-opacity">Sản phẩm bán chạy <img width="50" src="/new.gif" /></h3>
+>>>>>>> 52de6ec298d60417c0e2445c2c8732a58861ae02
         </div>
         <div v-if="search.by=='_'" class="row mb-3">
             <div class="card">

@@ -18,6 +18,8 @@ import TabMenu from 'primevue/tabmenu';
 import { cart_tabs } from '../../tabs';
 import InputNumber from 'primevue/inputnumber';
 import Dropdown from "primevue/dropdown";
+import Skeleton from 'primevue/skeleton';
+
 interface shoppingCartCustom extends shoppingCart{
     ID_Color:number
 }
@@ -122,7 +124,7 @@ onMounted(()=>{
     <div class="p-3 bg-light mt-3 rounded" style="min-height: 100vh;">
         
         <form>
-            <div v-for="ca in carts">
+            <div v-if="carts" v-for="ca in carts">
                 <input type="text" hidden/>
                 <div class="row bg-light mt-3 w-100 border-bottom flex-grow-1">
                     <div class="col-sm-2">
@@ -156,7 +158,46 @@ onMounted(()=>{
                 
                 </div>
             </div>
-            
+            <div v-else class="border-round border-1 surface-border p-4 surface-card">
+                <ul class="m-0 p-0 list-none">
+                    <li class="mb-3">
+                        <div class="flex">
+                            <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
+                            <div class="align-self-center" style="flex: 1">
+                                <Skeleton width="100%" class="mb-2"></Skeleton>
+                                <Skeleton width="75%"></Skeleton>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <div class="flex">
+                            <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
+                            <div class="align-self-center" style="flex: 1">
+                                <Skeleton width="100%" class="mb-2"></Skeleton>
+                                <Skeleton width="75%"></Skeleton>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <div class="flex">
+                            <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
+                            <div class="align-self-center" style="flex: 1">
+                                <Skeleton width="100%" class="mb-2"></Skeleton>
+                                <Skeleton width="75%"></Skeleton>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="flex">
+                            <Skeleton shape="circle" size="4rem" class="mr-2"></Skeleton>
+                            <div class="align-self-center" style="flex: 1">
+                                <Skeleton width="100%" class="mb-2"></Skeleton>
+                                <Skeleton width="75%"></Skeleton>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
         </form>
         <div v-if="carts?.length == 0" class="d-flex flex-column">
             <h4 class="text-center">Giỏ hàng đang trống, Nào ! hãy đặt chọn và đặt vào giỏ hàng ngay.</h4>

@@ -499,7 +499,9 @@ class ProductController extends Controller
         $ID_Color = $request->input('ID_Color');
         $ID_Material = $request->input('ID_Material');
         $ID_D = $request->input('ID_D');
+
         $ID_Product = $request->input('ID_Product');
+        
         $amountImport = import_history_detail::where('ID_Color',$ID_Color)
         ->where('ID_Material',$ID_Material)
         ->where('ID_D',$ID_D)
@@ -519,7 +521,11 @@ class ProductController extends Controller
         return json_encode([
             'status'=> 200,
             'message' => 'success',
-            'value' => $amount 
+            'value' => $amount,
+            'ID_Color' => $ID_Color,
+            'ID_Material' => $ID_Material,
+            'ID_D' => $ID_D,
+
         ]);
     }
 private function getRelates($table)

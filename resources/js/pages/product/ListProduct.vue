@@ -114,10 +114,10 @@ const getUsers = () => {
 }
 watch([selectedColorImport, selectedDimensionsImport, selectedMaterialImport], (values: [number?, number?, number?]) => {
     const [newColor, newDimensions, newMaterial] = values;
-    console.log(newColor);
-    console.log(newDimensions);
-    console.log(newMaterial);
-    if(newColor && newDimensions && newMaterial) {
+    console.log(getMaterialObject);
+    console.log(getColorObject);
+   
+    if((getMaterialObject.value.length == 0 || newColor)  && (currentForm.value.Dimensions.length == 0 || newDimensions )  && (getMaterialObject.value.length == 0 || newMaterial)) {
         let form = {
             ID_Color:newColor,
             ID_Material:newMaterial,
@@ -302,6 +302,7 @@ const updateProduct = (productData:FormState) => {
 }
 const importProduct = (productData:FormState) => {
     $('#form_modal').modal('show');
+    selectedDimensionsImport.value = selectedMaterialImport.value = selectedColorImport.value = undefined;
     mode.value = 'import';
     Object.keys(productData).forEach(key=> {
         if(productData[key as keyof FormState] !== undefined)
