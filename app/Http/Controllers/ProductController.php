@@ -14,6 +14,7 @@ use App\Models\Material;
 use App\Models\order;
 use App\Models\Product;
 use App\Models\product_price_history;
+use App\Models\Sale_Off;
 use App\Models\ShoppingCart;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\Auth\AuthRepositoryInterface;
@@ -39,8 +40,12 @@ class ProductController extends Controller
      */
     public function index($by,$keyword)
     {
+        $currentTimestamp = time();
+
         $query = Product::select()
-            ->with(['category','dimensions','detailProductImage','detailSaleOfProduct','detailSaleOfProduct.saleOff','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
+            ->with(['category','dimensions','detailProductImage','detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
+                Sale_Off::applySaleCondition($query, $currentTimestamp);
+            },'detailSaleOfProduct.saleOff','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
             ,'detailProductMaterial.material',
             'detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
             ,'detailProductColor.color']);
@@ -183,7 +188,7 @@ class ProductController extends Controller
                 }
             }
             $product->Price_SaleOff =  $price ; 
-            
+        
         
         return $product;
     }
@@ -553,17 +558,24 @@ class ProductController extends Controller
 
         ]);
     }
-private function getRelates($table)
+
+    private function getRelates($table)
     {
-        return $table->with('detailProductImage')
-        ->with('category')
-        ->with('dimensions')
-        ->with('detailSaleOfProduct')
-        ->with('detailSaleOfProduct.saleOff')
-        ->with(['detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
-            ,'detailProductMaterial.material'])
-        ->with(['detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
-            ,'detailProductColor.color']);
+        $currentTimestamp = time();
+
+        return $table
+            ->with('detailProductImage')
+            ->with('category')
+            ->with('dimensions')
+            ->with(['detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
+                Sale_Off::applySaleCondition($query, $currentTimestamp);
+            }])
+            ->with(['detailProductMaterial' => function ($query) {
+                $query->distinct()->groupBy(['ID_Material', 'ID_Product']);
+            }, 'detailProductMaterial.material'])
+            ->with(['detailProductColor' => function ($query) {
+                $query->distinct()->groupBy(['ID_Color', 'ID_Product']);
+            }, 'detailProductColor.color']);
     }
     private function insertSize($array_Dimensions,$productID)
     {

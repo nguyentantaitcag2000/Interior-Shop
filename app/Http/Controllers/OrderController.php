@@ -110,7 +110,14 @@ class OrderController extends Controller
             if($product->detailSaleOfProduct)
             {
                 foreach ($product->detailSaleOfProduct as $key2 => $detail_sale) {
-                    $price -= ($product->Price * $detail_sale->saleOff->Discount_Percent_SO/100);
+                    $currentTimestamp = time();
+                    $startTimestamp = strtotime($detail_sale->saleOff->Start_Date_SO);
+                    $endTimestamp = strtotime($detail_sale->saleOff->End_Date_SO);
+
+                    // Kiểm tra xem Ngày hiện tại nằm trong khoảng thời gian sale
+                    if ($currentTimestamp >= $startTimestamp && $currentTimestamp <= $endTimestamp) {
+                        $price -= ($product->Price * $detail_sale->saleOff->Discount_Percent_SO / 100);
+                    }
                 }
             }
             $product->Price_SaleOff =  $price ; 

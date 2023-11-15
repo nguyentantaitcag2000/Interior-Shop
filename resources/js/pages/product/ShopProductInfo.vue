@@ -14,7 +14,7 @@ img {
 import {onMounted, ref,reactive,computed,watch,watchEffect} from 'vue';
 import { useRoute } from 'vue-router';
 import { useRouter } from 'vue-router';
-import { product,comment } from '../../interface';
+import { product,comment, SaleOff } from '../../interface';
 import axios, { formToJSON } from 'axios';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
@@ -25,6 +25,8 @@ import Rating from 'primevue/rating';
 import Breadcrumb from 'primevue/breadcrumb';
 import Skeleton from 'primevue/skeleton';
 import Badge from 'primevue/badge';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 const route = useRoute();
 const router = useRouter();
 const myProduct = ref<product>();
@@ -34,6 +36,8 @@ const activeIndex = ref(1);
 const rating = ref(0);
 const tonKho = ref(-1);
 const isLogin = ref(false);
+const sales = reactive<SaleOff[]>([]);
+const loadingSales = ref(false);
 interface MyImage {
     itemImageSrc: string;
     thumbnailImageSrc: string;
@@ -79,7 +83,6 @@ watch(()=> route.params, ()=>{
     loadProduct();
 });
 const comment_content = ref('');
-
 const Comment = (event:Event,reply_to?:number,replyContent?:string) => {
     event.preventDefault();
     let content = comment_content.value;
@@ -279,6 +282,12 @@ axios.get('/api/product/' + route.params.id).then(res => {
 onMounted(()=>{
     
     loadProduct();
+    loadingSales.value = true;
+    axios.post('/api/showSale/' + route.params.id).then(res=>{
+        Object.assign(sales, (res.data as any).sales);
+        loadingSales.value = false;
+    })
+
     axios.post('/api/shoppingcart/get_carts_not_checkout').then(res => {
         let array = res.data;
         if(array.length > 0 )
@@ -401,6 +410,23 @@ onMounted(()=>{
                 </div>
                     
             </div>
+        </div>
+        <div class="row">
+            <h1>Thông tin khuyến mãi</h1>
+            <DataTable :value="sales" tableStyle="min-width: 50rem">
+                <Column field="sale_off.Name_SO" header="Tên khuyến mãi"></Column>
+                <Column field="sale_off.Discount_Percent_SO" header="Giảm giá (%)"></Column>
+                <Column field="sale_off.Start_Date_SO" header="Ngày bắt đầu"></Column>
+                <Column field="sale_off.End_Date_SO" header="Ngày kết thúc"></Column>
+                <Column header="Tình trạng">
+                <template #body="slotProps">
+                    <span v-if="slotProps.data.Apply == 1"><Badge value="Đang áp dụng"></Badge></span>
+                    <span v-else-if="slotProps.data.Apply == 2"><Badge severity="danger" value="Đã áp dụng"></Badge></span>
+                    <span v-else>Chưa áp dụng</span>
+                </template>
+                </Column>
+               
+            </DataTable>
         </div>
         <div class="row ms-0 mt-5 w3-animate-bottom">
             <div class="row border w-100" data-bs-spy="scroll" data-bs-target=".navbar" data-bs-offset="50" style="position: relative;">

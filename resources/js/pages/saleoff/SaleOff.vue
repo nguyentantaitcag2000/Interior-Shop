@@ -33,7 +33,7 @@ const initialFormState:SaleOff = {
 const form = reactive<SaleOff>(JSON.parse(JSON.stringify(initialFormState)));
 
 let form_update = reactive<SaleOff>(JSON.parse(JSON.stringify(initialFormState)));
-    function convertTimestampToCalendarDate(timestamp) {
+    function convertTimestampToCalendarDate(timestamp:any) {
       // Chuyển đổi timestamp thành chuỗi định dạng ISO 8601
       const isoDate = new Date(timestamp).toISOString();
 
@@ -48,8 +48,8 @@ function SubmitForm(event:Event, isUpdate: boolean= false)
     let url = isUpdate ? '/api/updateSaleOff/' + idUpadteSale : '/api/createSaleOff';
     if(isUpdate)
     {
-        myForm.startTimestamp = convertToTimestamp(form_update.startTimestamp)!;
-        myForm.endTimestamp = convertToTimestamp(form_update.endTimestamp)!;
+        myForm.startTimestamp = convertToTimestamp(startDate_update.value)!;
+        myForm.endTimestamp = convertToTimestamp(endDate_update.value)!;
     }
     else{
         myForm.startTimestamp = convertToTimestamp(startDate.value)!;
@@ -162,7 +162,7 @@ const deleteSale = (ID_Sales:string) => {
 
 
 
-function convertToTimestamp(dateInput) {
+function convertToTimestamp(dateInput:any) {
   const timestamp = Date.parse(dateInput);
   return isNaN(timestamp) ? null : timestamp;
 }

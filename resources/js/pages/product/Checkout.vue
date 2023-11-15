@@ -5,6 +5,7 @@ import { shoppingCart,methodOfPayment,shipMethod, product } from '../../interfac
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
 import { routerKey, useRoute,useRouter } from 'vue-router';
+import Badge from 'primevue/badge';
 const route = useRoute();
 const router = useRouter();
 interface FormState{
@@ -186,10 +187,11 @@ onMounted(()=>{
                 <h3><b>Phương thức thanh toán</b></h3>
                 <div>
                     <div v-for="mop in methodOfPaymentList" class="form-check">
-                        <input v-model="form.ID_MOP" class="form-check-input" :id="'mop' + mop.ID_MOP" type="radio" :value="mop.ID_MOP" name="gridRadios">
+                        <input :disabled="mop.Name_MOP.includes('chuyển khoản')" v-model="form.ID_MOP" class="form-check-input" :id="'mop' + mop.ID_MOP" type="radio" :value="mop.ID_MOP" name="gridRadios">
                         <label class="form-check-label" :for="'mop' + mop.ID_MOP">
                             {{ mop.Name_MOP }}
                         </label>
+                        <Badge v-if="mop.Name_MOP.includes('chuyển khoản')" class="ml-2" value="Sắp ra mắt"></Badge>
                     </div>
                 </div>
                 <h3><b>Phương thức vận chuyển</b></h3>
