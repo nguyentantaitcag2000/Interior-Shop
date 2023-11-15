@@ -35,6 +35,10 @@ class Product extends Model
     {
         return $this->hasMany(DetailProductColor::class,"ID_Product");
     }
+    public function detailSaleOfProduct()
+    {
+        return $this->hasMany(Detail_SaleOf_Product::class,"ID_Product");
+    }
     public function dimensions()
     {
         return $this->hasMany(dimensions::class,"ID_Product");

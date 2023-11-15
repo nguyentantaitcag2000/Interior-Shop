@@ -2,6 +2,7 @@
 use Illuminate\Support\Facades\Session;
 
 ?>
+
 <!DOCTYPE html>
 
 <html lang="en">

@@ -84,10 +84,11 @@ onMounted(()=>{
         </table>
         <!-- Tổng tiền -->
         <div class="total">
-        <h6>Tổng tiền đơn hàng: {{ formatCurrency(bill?.TotalMoney) }}</h6>
-        <h6>VAT: {{ formatCurrency(bill?.VAT_rate) }}</h6>
-        <h6>Phí VAT: {{ formatCurrency(bill?.VAT_amount) }}</h6>
-        <h4>Tổng tiền thanh toán: {{ formatCurrency(bill?.TotalMoneyCheckout) }}</h4>
+        <h6><b>Tổng tiền đơn hàng:</b> {{ formatCurrency(bill?.TotalMoney) }}</h6>
+        <h6><b>Tổng tiền đơn hàng đã áp dụng khuyến mãi:</b> {{ formatCurrency(bill?.TotalMoneyAfterSaleOff) }}</h6>
+        <h6><b>VAT:</b> {{ bill?.VAT_rate + '%' }}</h6>
+        <h6><b>Phí VAT:</b> {{ formatCurrency(bill?.VAT_amount) }}</h6>
+        <h4><b>Tổng tiền thanh toán:</b> {{ formatCurrency(bill?.TotalMoneyCheckout) }}</h4>
         <!-- Các thông tin khác -->
         </div>
   </div>

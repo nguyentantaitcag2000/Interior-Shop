@@ -20,12 +20,20 @@ RUN apt-get update && apt-get install -y \
     && curl -fsSL https://deb.nodesource.com/setup_14.x | bash - \
     && apt-get install -y nodejs
 
+
+# Cài đặt Xdebug (PHẢI KÈM THEO LỆNH COPY php.ini phía dưới vào docker)
+RUN pecl install -o -f xdebug \
+    && docker-php-ext-enable xdebug
+
+
 # Cấu hình Apache
 RUN a2enmod rewrite
 WORKDIR /var/www/html
 
 # Sao chép ứng dụng vào image
 COPY . .
+COPY ./docker-php.ini "${PHP_INI_DIR}"/conf.d
+
 # COPY package*.json ./
 # Cài đặt Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -42,7 +50,9 @@ RUN php artisan storage:link
 RUN chown -R www-data:www-data /var/www/html/storage
 RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
 
-
+# Cài đặt Xdebug (PHẢI KÈM THEO LỆNH COPY php.ini phía dưới vào docker)
+RUN pecl install -o -f xdebug \
+    && docker-php-ext-enable xdebug
 # Expose port và khởi động Apache
 EXPOSE 8000
 # CMD php artisan serve --host=0.0.0.0 --port=8000

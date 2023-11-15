@@ -232,7 +232,7 @@ const isNotHaveSize = ()=>{
 }
 const loadProduct = () => {
     form.ID_Product = Number(route.params.id);
-    axios.get('/api/product/' + route.params.id).then(res => {
+axios.get('/api/product/' + route.params.id).then(res => {
         myProduct.value = res.data;
         let category = myProduct.value?.category.Name_Category == undefined ? '' : myProduct.value?.category.Name_Category;
         items_Breadcrumb.splice(0,items_Breadcrumb.length);
@@ -333,8 +333,12 @@ onMounted(()=>{
                     <input value="<?=$data['Product']['ID_Product']?>" id="product_id" hidden>
                     <h1 v-if="myProduct">{{ myProduct?.Name_Product }}</h1>
                     <Skeleton v-else height="4rem" class="mb-2"></Skeleton>
-
-                    <p v-if="myProduct" class="text-danger h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price) }}</strong></p>
+                    <div v-if="myProduct && myProduct.detail_sale_of_product.length>0">
+                        <del class="text-primary h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price) }}</strong></del>
+                        <p class="text-danger h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price_SaleOff) }}</strong></p>
+                        
+                    </div>
+                    <p v-else-if="myProduct" class="text-danger h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price) }}</strong></p>
                     <Skeleton v-else height="2rem" class="mb-2"></Skeleton>
 
                     <hr>

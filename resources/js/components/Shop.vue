@@ -13,6 +13,7 @@ import { useToast } from 'primevue/usetoast';
 import Carousel from 'primevue/carousel';
 import Chatbot from './Chatbot.vue';
 import FileUpload, { FileUploadUploaderEvent } from 'primevue/fileupload';
+import Badge from 'primevue/badge';
 
 let myIndex = 0;
 const route = useRoute();
@@ -251,6 +252,10 @@ onMounted(()=>{
                             </div>
                             <div>
                                 <h4 class="mb-1"><router-link :to="'/product/' + slotProps.data.ID_Product">{{  slotProps.data.Name_Product  }}</router-link></h4>
+                                
+                                <h6 v-if="slotProps.data.detail_sale_of_product.length>0" class="mt-0 mb-3">
+                                    <del>{{ LazyConvert.ToMoney( slotProps.data.Price) }}</del>
+                                </h6>
                                 <h6 class="mt-0 mb-3">${{ LazyConvert.ToMoney( slotProps.data.Price) }}</h6>
 
                             </div>
@@ -292,12 +297,22 @@ onMounted(()=>{
                     <div class="product-image2">
                         <router-link :to="'/product/' + pr.ID_Product" >
                             <img class="pic-1" :src="pr.Avatar">
+                            <div v-if="pr.detail_sale_of_product.length>0" class="position-absolute" style="top:5px; right:5px">
+                                <Badge severity="danger" value="Giảm giá"></Badge>
+                            </div>
                         </router-link>
 
                     </div>
                     <div class="product-content">
                         <h3 class="title"><router-link :to="'/product/' + pr.ID_Product">{{ pr.Name_Product }}</router-link></h3>
-                        <span class="price">{{ LazyConvert.ToMoney(pr.Price) }}</span>
+                        <div v-if="pr.detail_sale_of_product.length>0">
+                            <span class="mt-0 mb-3">
+                                <del>{{ LazyConvert.ToMoney( pr.Price) }}</del>
+                            </span><br>
+                            <span class="price">{{ LazyConvert.ToMoney( pr.Price_SaleOff) }}</span>
+                        </div>
+                        
+                        <span v-else class="price">{{ LazyConvert.ToMoney(pr.Price) }}</span>
                     </div>
                 </div>
             </div>

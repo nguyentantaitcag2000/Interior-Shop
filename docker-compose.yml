@@ -13,6 +13,8 @@ services:
       - ./apache.conf:/etc/apache2/sites-available/000-default.conf
     links:
       - db
+    environment:
+      XDEBUG_MODE: develop,debug
     networks:
       - laravel
   db:

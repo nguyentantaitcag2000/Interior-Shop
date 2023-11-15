@@ -12,9 +12,15 @@ import InputMask from 'primevue/inputmask';
 import $ from 'jquery';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import {material,color,category,detailProductColor,detailProductMaterial,detailProductImage,
-    importHistoryDetail,
-product} from '../../interface';
+    importHistoryDetail,detailSaleOfProduct,
+product,
+SaleOff} from '../../interface';
+import { LoadSales } from '../../main';
+import Badge from 'primevue/badge';
 const tonKho_import = ref('Không xác định');
+const sales = reactive<SaleOff[]>([]);
+const loadingSales = ref(false);
+const selectedSales = ref();
 interface FormState{
     'ID_Product': number ,
     'ID_Category': number ,
@@ -33,6 +39,7 @@ interface FormState{
     'detail_product_material': detailProductMaterial[] ,
     'detail_product_color': detailProductColor[] ,
     'detail_product_image': detailProductImage[] ,
+    'detail_sale_of_product': detailSaleOfProduct[],
     import_history_detail: importHistoryDetail
 }
 
@@ -78,6 +85,7 @@ const initialFormState:FormState = {
     'detail_product_material': [],
     'detail_product_color': [],
     'detail_product_image': [],
+    'detail_sale_of_product': [],
     'import_history_detail': {
         Amount:1,
         ID_IH:-1,
@@ -91,6 +99,7 @@ const initialFormState:FormState = {
 const form = reactive<FormState>(JSON.parse(JSON.stringify(initialFormState)));
 let form_update = reactive<FormState>(JSON.parse(JSON.stringify(initialFormState)));
 let form_import = reactive<FormState>(JSON.parse(JSON.stringify(initialFormState)));
+const idSaleUpdate = ref(-1);
 const getUsers = () => {
     axios.get('/api/products/_/_').then((res)=>{
         products.value = res.data;
@@ -300,6 +309,16 @@ const updateProduct = (productData:FormState) => {
             return item.Image;
         });
 }
+const saleOffProduct = (productData:FormState) =>{
+    $('#form_modal_saleoff').modal('show');
+    idSaleUpdate.value = productData.ID_Product;
+
+    if(productData.detail_sale_of_product)
+        selectedSales.value = productData.detail_sale_of_product.map(item => {
+            return item.ID_SO;
+        });
+     
+}
 const importProduct = (productData:FormState) => {
     $('#form_modal').modal('show');
     selectedDimensionsImport.value = selectedMaterialImport.value = selectedColorImport.value = undefined;
@@ -420,9 +439,46 @@ const DeleteImage = (event:any) => {
     
 
 }
-
+function SubmitFormSale(event:Event)
+{
+    event.preventDefault();
+    console.log(selectedSales.value);
+    LazyCodet.AlertProcessing({
+        requireConfirm: false,
+        alertMessage: "Đang xử lý...",
+        workerFunction: () => {
+          
+            let urlCall = '/api/UpdateDetailSale';
+            
+           
+           
+            
+            return axios.post(urlCall,{
+                ID_Product: idSaleUpdate.value,
+                id_sales: selectedSales.value
+            }).then((res)=>{
+                if(res.data.status == 200)
+                {
+                    LazyCodet.AlertSuccess(res.data.message);
+                    let index = products.value!.findIndex(item => item.ID_Product === idSaleUpdate.value);
+                    if (index !== -1) {
+                        products.value![index].detail_sale_of_product = res.data.object;
+                    }
+                    $('#form_modal_saleoff').modal('hide');
+                    
+                }
+                else
+                {
+                    LazyCodet.AlertError(res.data.message);
+                }
+            });
+        }
+    })
+}
 onMounted(()=>{
     getUsers();
+    LoadSales(loadingSales, sales);
+
 });
 
 </script>
@@ -508,6 +564,9 @@ img {
                 </button>
                 <button data-toggle="modal" class="btn btn-primary p-1 m-1" @click="importProduct(slotProps.data)">
                     Import
+                </button>
+                <button data-toggle="modal" class="btn btn-success p-1 m-1" @click="saleOffProduct(slotProps.data)">
+                    Sale-off
                 </button>
                 <button class="btn btn-danger p-1 m-1" @click="deleteProduct(slotProps.data.ID_Product)">
                     Delete
@@ -667,6 +726,47 @@ img {
                         <button v-if="mode == 'insert'" type="submit" class="btn btn-primary">Insert</button>
                         <button v-else-if="mode == 'import'" type="submit" class="btn btn-primary">Import</button>
                         <button v-else type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div>
+    </div>
+    <!-- FORM MODEL SALEOFF -->
+    <div class="modal fade" id="form_modal_saleoff" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Tạo khuyến mãi</h5>
+            </div>
+            <div class="modal-body">
+                <form ref="formInsertRef" method="POST" @submit="SubmitFormSale">
+                    <div>
+                        <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <label class="input-group-text" for="inputGroupSelect01">Khuyến mãi:</label>
+                                    </div>
+                                    <!-- <Dropdown v-model="selectedMaterial" :options="materials" optionLabel="Name_Material" placeholder="Chọn chất liệu" class="w-full md:w-14rem" style="z-index: 10008;" /> -->
+                                    <!-- <MultiSelect v-model="selectedSales" display="chip" :options="sales" optionLabel="Name_SO" optionValue="ID_SO" placeholder="Chọn khuyến mãi"
+                                        :maxSelectedLabels="3" class="w-full md:w-20rem" /> -->
+                                    <MultiSelect v-model="selectedSales" display="chip" :options="sales" optionLabel="Name_SO" optionValue="ID_SO"  placeholder="Chọn khuyến mãi"
+                                     class="w-full md:w-20rem" :maxSelectedLabels="3" >
+                                        <template #option="slotProps">
+                                            <div class="d-flex align-items-center" >
+                                                <div class="mr-3">{{ slotProps.option.Name_SO }}</div>
+                                                <Badge :value="slotProps.option.Discount_Percent_SO + '%'"></Badge>
+                                            </div>
+                                        </template>
+                                    </MultiSelect>
+                                    <div class="container"></div>
+                                    <input id="material_list" type="text" hidden />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> -->
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                   
                     </div>
                 </form>
             </div>

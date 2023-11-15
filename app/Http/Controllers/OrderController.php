@@ -98,15 +98,31 @@ class OrderController extends Controller
         // Tạo bill
         
         $totalMoney = 0;
+        $totalMoneyAfterSaleOff = 0;
         $vat = 8;
         foreach ($CartDetailList as $key => $cartDetail) {
             $totalMoney += $cartDetail->product->Price * $cartDetail->Amount_CD;
         }
+        foreach ($CartDetailList as $key => $cardetail) {
+            // Tính số tiền đã được giảm giá nếu có
+            $product= $cardetail->product;
+            $price = $product->Price;
+            if($product->detailSaleOfProduct)
+            {
+                foreach ($product->detailSaleOfProduct as $key2 => $detail_sale) {
+                    $price -= ($product->Price * $detail_sale->saleOff->Discount_Percent_SO/100);
+                }
+            }
+            $product->Price_SaleOff =  $price ; 
+                
+            $totalMoneyAfterSaleOff += $price * $cardetail->Amount_CD;
+        }
         $vat_amount = $totalMoney * $vat/100;
-        $totalMoneyCheckout =  $totalMoney + $vat_amount;
+        $totalMoneyCheckout =  $totalMoneyAfterSaleOff + $vat_amount;
 
         bill::create([
             'TotalMoney' => $totalMoney,
+            'TotalMoneyAfterSaleOff' => $totalMoneyAfterSaleOff,
             'VAT_rate' => $vat,
             'VAT_amount' => $vat_amount,
             'TotalMoneyCheckout' => $totalMoneyCheckout,
