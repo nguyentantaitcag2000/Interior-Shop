@@ -58,6 +58,7 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/createSaleOff', [SaleOffController::class, 'store']);
     Route::post('/updateSaleOff/{id}', [SaleOffController::class, 'update']);
     Route::post('/showSales', [SaleOffController::class, 'index']);
+    Route::post('/showSale/{id}', [SaleOffController::class, 'show']);
     Route::post('/UpdateDetailSale', [DetailSaleOfProductController::class, 'update']);
 
 });

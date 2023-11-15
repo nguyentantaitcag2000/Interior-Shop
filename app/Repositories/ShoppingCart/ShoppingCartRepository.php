@@ -3,6 +3,7 @@ namespace App\Repositories\ShoppingCart;
 
 use App\Models\CartDetail;
 use App\Models\order;
+use App\Models\Sale_Off;
 use App\Models\ShoppingCart;
 use App\Repositories\Auth\AuthRepositoryInterface;
 use Illuminate\Config\Repository;
@@ -13,7 +14,11 @@ use function PHPSTORM_META\map;
 class ShoppingCartRepository extends Repository implements ShoppingCartRepositoryInterface{
     public function getWith($id_status, $id_user)
     {
-        $carts = ShoppingCart::with(['cart_detail.color','cart_detail.product.detailSaleOfProduct','cart_detail.product.detailSaleOfProduct.saleOff','cart_detail.product.detailProductColor' => function($query) {
+        $currentTimestamp = time();
+
+        $carts = ShoppingCart::with(['cart_detail.color','cart_detail.product.detailSaleOfProduct' => function($query) use($currentTimestamp){
+            Sale_Off::applySaleCondition($query, $currentTimestamp);
+        },'cart_detail.product.detailSaleOfProduct.saleOff','cart_detail.product.detailProductColor' => function($query) {
             $query->distinct()->with('color');
         },
         'cart_detail.material','cart_detail.dimensions'])

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Detail_SaleOf_Product;
 use App\Models\Sale_Off;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,9 +52,20 @@ class SaleOffController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Sale_Off $sale_Off)
+    public function show(string $id)
     {
-        //
+        $sales = Detail_SaleOf_Product::with('saleOff')->where('ID_Product',$id)->orderBy('ID_SO','desc')->get();
+        //Tính toán xem sales nào đang được áp dụng
+
+        $currentTimestamp = time();
+
+        Sale_Off::SolveStatusSale($sales);
+       
+        return json_encode([
+            'status' => 200,
+            'message' => 'success',
+            'sales' => $sales
+        ]);
     }
 
     /**
