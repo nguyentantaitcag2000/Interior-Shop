@@ -30,12 +30,12 @@ use Illuminate\Support\Facades\Session;
                 <div class="collapse navbar-collapse" id="mynavbar">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                        <a class="nav-link text-dark" href="/Home/Introduce">Giới thiệu</a>
+                            <router-link class="nav-link" to="/introduce">Giới thiệu</router-link>
                         </li>
-                        
                         <li class="nav-item">
-                        <a class="nav-link text-dark" href="/Home/Contact">Liên hệ</a>
+                            <router-link class="nav-link" to="/contact">Liên hệ</router-link>
                         </li>
+                      
                     </ul>
                     <div class="d-flex position-relative" id="search_bar">
                         <input id="search" class="form-control me-2" type="text" style="height: 50px;" placeholder="Tìm kiếm thứ gì đó">

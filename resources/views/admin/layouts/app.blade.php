@@ -212,6 +212,14 @@
                                 </p>
                             </router-link>
                         </li>
+                        <li  class="nav-item">
+                            <router-link to="/admin/bill/1" active-class="active" class="nav-link">
+                                <i class="nav-icon fas fa-list"></i>
+                                <p>
+                                    Đơn hàng
+                                </p>
+                            </router-link>
+                        </li>
                         
                         <li class="nav-item">
                             <a href="#" class="nav-link">

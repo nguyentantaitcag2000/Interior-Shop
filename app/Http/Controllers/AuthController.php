@@ -21,7 +21,7 @@ class AuthController extends Controller
         if (!$khach_hang) {
             return json_encode([
                 'status' => 401,
-                'message' => 'Email không chính xác.'
+                'message' => 'Email này chưa đăng kí.'
             ]);
         }
         if (!Hash::check($mat_khau, $khach_hang->password)) {

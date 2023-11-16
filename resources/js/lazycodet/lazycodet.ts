@@ -114,7 +114,7 @@ export const LazyCheck = {
       notify_username.appendChild(p);
       return isValid;
     },
-    ValidEmail: (email:string,language='eng') => {
+    ValidEmail: (email:string,language='vie') => {
       let emailValidityMessage = "Email's valid.";
 
       let translatedEmailValidityMessage = "";
@@ -149,7 +149,7 @@ export const LazyCheck = {
           notify_email.appendChild(p);
           return isValid;
     },
-    PasswordSecure: (password:string,language='eng') =>
+    PasswordSecure: (password:string,language='vie') =>
     {
       let passwordRequirements = {
         containsNumber: "The password must contain at least one number [0-9]",
