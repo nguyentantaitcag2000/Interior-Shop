@@ -7,9 +7,14 @@ import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
 import TabMenu from 'primevue/tabmenu';
 import { cart_tabs } from '../../tabs';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
+
 const order = ref<order[]>();
 const route = useRoute();
 const totalMoney = ref(0);
+const isLoading = ref(false);
 const events = ref([
     { status: 'Ordered', date: '15/10/2020 10:30', icon: 'pi pi-shopping-cart', color: '#9C27B0'},
     { status: 'Processing', date: '15/10/2020 14:00', icon: 'pi pi-cog', color: '#673AB7' },
@@ -49,9 +54,17 @@ const ChangeBillStatus = (event:Event, ord:order, id_bs:number) => {
 
 
 }
+// Khai báo fillters cho chức năng tìm kiếm ở datatable
+const filters = reactive({
+    global: {
+        value: ''
+    }
+} as any);
 const loadBill = () =>{
+    isLoading.value = true;
     axios.post('/api/order/getAll',{ID_BS: route.params.id}).then(res=>{
         order.value = res.data;
+        isLoading.value =false;
         console.log(res.data);
     });
 }
@@ -63,58 +76,57 @@ onMounted(()=>{
 </script>
 <template>
     <div class="p-3">
-        <div>
-            <h1 class="h1">Đơn hàng</h1>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered table-hover" style="width:100%">
-            <thead>
-                <tr>
-                <th>Đơn đặt hàng</th>
-                <th>Ngày</th>
-                <th>Tình trạng</th>
-                <th>Giao hàng đến</th>
-                <th>Khách hàng</th>
-                <th>Tổng</th>
-                <th>Các thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-
-            <tr v-for="ord in order">
-                <td>
-                    <div class="form-check">
-                    <label class="form-check-label" for="vehicle1">
-                        <a :href="'/bill/' + ord.bill.ID_Bill" target="_blank">#{{ ord.bill.ID_Bill }}</a>
-                        </label>
-                    </div>
-                </td>
-                <td>{{ ord.bill.CreateDate }}</td>
-                <td>{{ ord.bill.bill_status.Name_BS }}</td>
-                <td>{{ ord.Address_O }}</td>
-                <td>{{ ord.Customer_Name }}</td>
-                <td>{{ LazyConvert.ToMoney(ord.bill.TotalMoneyCheckout)  }}</td>
-                <td>
-                        <a @click="ChangeBillStatus($event,ord,2)" class="btn btn-success">Đã thanh toán</a>
-                        <a @click="ChangeBillStatus($event,ord,1)" class="btn btn-light">Chưa thanh toán</a>
-                        <a @click="ChangeBillStatus($event,ord,3)" class="btn btn-primary">Đang vận chuyển</a>
-                        <a @click="ChangeBillStatus($event,ord,4)" class="btn btn-danger">Hủy đơn</a>
-
-
-                </td>
-            </tr>
-
-
-
-            </tbody>
-            </table>
-
             <router-link to="/admin/bill/1"   class="btn btn-link">Xem các đơn chưa thanh toán</router-link>
             <router-link to="/admin/bill/2"   class="btn btn-link">Xem các đơn đã thanh toán</router-link>
             <router-link to="/admin/bill/3"   class="btn btn-link">Xem các đơn đang vận chuyển</router-link>
             <router-link to="/admin/bill/4"   class="btn btn-link">Xem các đơn đã hủy</router-link>
             <router-link to="/admin/bill/0"   class="btn btn-link">Tất cả</router-link>
-        </div>
+            <DataTable v-model:filters="filters" :value="order" dataKey="bill.ID_Bill" tableStyle="min-width: 50rem" showGridlines stripedRows
+                paginator :rows="5" :rowsPerPageOptions="[5, 10, 20, 50]"
+                :globalFilterFields="['bill.ID_Bill', 'Customer_Name', 'Address_O' ]" filterDisplay="row" :loading="isLoading" 
+                >
+                <template #header>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span class="text-xl text-900 font-bold">Danh sách các đơn hàng:</span>
+                        <!-- <Button icon="fas fa-sync" rounded raised /> -->
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <span class="p-input-icon-left">
+                            <i class="fas fa-holly-berry" />
+                            <InputText v-model="filters['global'].value" placeholder="Keyword Search" />
+                        </span>
+                    </div>
+                </template>
+                <template #empty> No bills found. </template>
+                <template #loading> Loading bills data. Please wait. </template>
+                <Column   header="Đơn đặt hàng">
+                    <template #body="slotProps">
+                        <a :href="'/bill/' + slotProps.data.bill.ID_Bill" target="_blank">#{{ slotProps.data.bill.ID_Bill }}</a>
+                        
+                    </template>
+                </Column>
+                
+                <Column header="Ngày" field="bill.CreateDate" sortable></Column>
+                <Column header="Tình trạng" field="bill.bill_status.Name_BS" sortable></Column>
+                <Column header="Giao hàng đến" field="Address_O"></Column>
+                <Column header="Khách hàng" field="Customer_Name" sortable></Column>
+                <Column header="Tổng">
+                    <template #body="splotProps">
+                        {{ LazyConvert.ToMoney(splotProps.data.bill.TotalMoneyCheckout) }}
+                    </template>
+                </Column>
+                
+                <Column header="Hành động">
+                    <template #body="splotProps">
+                        <a @click="ChangeBillStatus($event,splotProps.data,2)" class="btn btn-success">Đã thanh toán</a>
+                        <a @click="ChangeBillStatus($event,splotProps.data,1)" class="btn btn-light">Chưa thanh toán</a>
+                        <a @click="ChangeBillStatus($event,splotProps.data,3)" class="btn btn-primary">Đang vận chuyển</a>
+                        <a @click="ChangeBillStatus($event,splotProps.data,4)" class="btn btn-danger">Hủy đơn</a>
+                    </template>
+                </Column>
+
+                <template #footer> Tổng cộng {{ order ? order.length : 0 }} đơn đặt hàng. </template>
+            </DataTable>
+           
     </div>
 </template>

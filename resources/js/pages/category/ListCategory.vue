@@ -197,14 +197,14 @@ img {
     
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" >
     <!-- <button type="button" data-bs-toggle="modal" data-bs-target="#insertModal" data-bs-whatever="@mdo" class="btn btn-success m-3">New product</button> -->
-    <button @click="openInsertModal" type="button" class="btn btn-success m-3">New product</button>
+    <button @click="openInsertModal" type="button" class="btn btn-success m-3">New category</button>
     <DataTable v-model:filters="filters" :value="categories" dataKey="ID_Category" tableStyle="min-width: 50rem" showGridlines stripedRows
                 paginator :rows="5" :rowsPerPageOptions="[5, 10, 20, 50]"
                 :globalFilterFields="['Name_Category']" filterDisplay="row" :loading="loading" 
                 >
         <template #header>
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <span class="text-xl text-900 font-bold">Danh sách các sản phẩm:</span>
+                <span class="text-xl text-900 font-bold">Danh sách các danh mục:</span>
                 <!-- <Button icon="fas fa-sync" rounded raised /> -->
             </div>
             <div class="d-flex justify-content-end">

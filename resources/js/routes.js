@@ -71,6 +71,20 @@ export default [
         component: () => import('./pages/product/Cart.vue'),
         meta: { title: 'Giỏ hàng' }
 
+    },
+    {
+        path: '/introduce',
+        name: 'introduce',
+        component: () => import('./pages/introduce.vue'),
+        meta: { title: 'Giới thiệu' }
+
+    },
+    {
+        path: '/contact',
+        name: 'contact',
+        component: () => import('./pages/contact.vue'),
+        meta: { title: 'Liên hệ' }
+
     }
     ,
     {
