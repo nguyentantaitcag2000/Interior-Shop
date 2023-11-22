@@ -47,4 +47,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    function User_UStatus()
+    {
+        return $this->belongsTo(User_UStatus::class,'ID_UStatus');
+    }
+   
 }

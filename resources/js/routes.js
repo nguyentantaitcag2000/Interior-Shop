@@ -28,6 +28,20 @@ export default [
 
     },
     {
+        path: '/admin/users',
+        name: 'admin.users',
+        component: ()=> import('./pages/User.vue'),
+        meta: { title: 'Danh sách người dùng' }
+
+    },
+    {
+        path: '/admin/seller',
+        name: 'admin.seller',
+        component: ()=> import('./pages/Seller.vue'),
+        meta: { title: 'Danh sách người bán' }
+
+    },
+    {
         path: '/admin/bill/:id',
         name: 'admin.bill',
         component: () => import('./pages/product/BillManager.vue'),
@@ -46,6 +60,14 @@ export default [
         name: 'shop-product-info',
         component: () => import('./pages/product/ShopProductInfo.vue'),
         meta: { title: 'Thông tin sản phẩm' }
+
+    }
+    ,
+    {
+        path: '/profile/:id',
+        name: 'profile',
+        component: () => import('./pages/Profile.vue'),
+        meta: { title: 'Thông tin cá nhân' }
 
     }
     ,
@@ -96,11 +118,36 @@ export default [
     }
     ,
     {
+        path: '/cart/done',
+        name: 'cart.done',
+        component: () => import('./pages/product/CartDone.vue'),
+        meta: { title: 'Giỏ hàng đã xử lý' }
+
+    }
+    ,
+    {
+        path: '/cart/shipping',
+        name: 'cart.shipping',
+        component: () => import('./pages/product/CartShipping.vue'),
+        meta: { title: 'Giỏ hàng đang vận chuyển' }
+
+    }
+    ,
+    {
+        path: '/cart/destroy',
+        name: 'cart.destroy',
+        component: () => import('./pages/product/CartDestroy.vue'),
+        meta: { title: 'Giỏ hàng đã bị huỷ' }
+
+    }
+    ,
+    {
         path: '/checkout/:id?/:amount?/:idColor?/:idMaterial?/:idDimensions?',
         name: 'checkout',
         component: () => import('./pages/product/Checkout.vue'),
         meta: { title: 'Thanh toán' }
     }
+    
     ,
     {
         path: '/bill/:id',

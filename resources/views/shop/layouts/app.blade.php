@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Session;
 <body>
     <div id="app">
         <nav class="navbar navbar-expand-sm w3-animate-top bg-light">
+            <input id="id_user_login" hidden value="{{session('id_user')}}"/>
             <div class="container-fluid">
                 <router-link class="navbar-brand" to="/">
                     <img src="/images/icon.png" class="rounded-circle" width="50" height="50">
@@ -65,12 +66,13 @@ use Illuminate\Support\Facades\Session;
                         <?php if(session()->has('email')) {?>
                         <div class="btn dropdown">
                             <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-expanded="false">
-                            <?=session('email');?>
+                            <span class="badge badge-primary mr-2">{{session('level')}}</span><?=session('email');?>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                <?php if(session('level') == 'admin') {?>
+                                <?php if(session('level') == 'admin' || session('level') == 'seller') {?>
                                     <li><a class="dropdown-item " href="/admin/dashboard">Trang quản trị</a></li>
                                 <?php }?>
+                                <li><router-link class="dropdown-item " to="/profile/{{session('id_user')}}">Thông tin cá nhân</router-link></li>
                                 <li><a class="dropdown-item " href="/auth/logout">Đăng xuất</a></li>
                             </ul>
                             <img src="/images/profile.png" style="width:35px">

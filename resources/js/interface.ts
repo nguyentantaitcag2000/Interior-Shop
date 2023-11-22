@@ -27,6 +27,10 @@ export interface shoppingCart{
     ID_CS:number,
     cart_detail:cartDetail[]
 }
+export interface user__u_status{
+    ID_UStatus: number,
+    Name_UStatus:string
+}
 export interface users{
     "ID_User": number,
     "Name_User": string,
@@ -36,6 +40,9 @@ export interface users{
     "verify": string,
     "regtime": number,
     "ID_UT": number,
+    "ID_UStatus": number,
+    'user__u_status': user__u_status
+    'user_type': user_type
 
 }
 export interface bill_status{
@@ -51,6 +58,10 @@ export interface bill{
     "ID_BS": number,
     "ID_Order": number,
     bill_status: bill_status
+}
+export interface user_type{
+    ID_UT: number,
+    Name_UT: string,
 }
 export interface billFull{
     "ID_Bill": number,
@@ -86,6 +97,26 @@ export interface SaleOff {
     percent:number,
     startTimestamp: number,
     endTimestamp: number,
+}
+export interface Rate{
+    ID_Rate: number,
+    Value_Rate: number,
+}
+export interface Review_Rating{
+    Content_RR: string,
+    created_at: string,
+    rate: Rate,
+    user: users
+}
+
+export interface Review_Rating_Response{
+    _1: Review_Rating[],
+    _2: Review_Rating[],
+    _3: Review_Rating[],
+    _4: Review_Rating[],
+    _5: Review_Rating[],
+    all: Review_Rating[],
+    total: number,
 }
 export interface comment{
     id:number,

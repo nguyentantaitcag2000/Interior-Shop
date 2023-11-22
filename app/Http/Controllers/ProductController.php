@@ -204,9 +204,12 @@ class ProductController extends Controller
     {
         $names = $request->input('names'); // Có dạng product32,product33,product44
         $nameArray = explode(',', $names);
+        $currentTimestamp = time();
 
         // Sử dụng Eloquent để truy vấn cơ sở dữ liệu và lấy thông tin Avatar
-        $products = Product::where(function ($query) use ($nameArray) {
+        $products = Product::with(['detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
+            Sale_Off::applySaleCondition($query, $currentTimestamp);
+        }])->where(function ($query) use ($nameArray) {
             foreach ($nameArray as $name) {
                 $query->orWhere('Avatar', 'LIKE', "%{$name}%");
             }
