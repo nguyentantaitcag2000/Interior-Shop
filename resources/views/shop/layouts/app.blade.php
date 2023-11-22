@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Session;
-
+date_default_timezone_set('Asia/Ho_Chi_Minh');
 ?>
 
 <!DOCTYPE html>
