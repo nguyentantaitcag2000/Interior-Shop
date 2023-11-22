@@ -22,7 +22,8 @@ class Sale_Off extends Model
     public static function SolveStatusSale(&$sales)
     {
         $currentTimestamp = time();
-        
+        // Đặt múi giờ cho hàm strtotime
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
 
         foreach ($sales as $key => $sale) {
             $startTimestamp = strtotime($sale->saleOff->Start_Date_SO);
