@@ -22,24 +22,21 @@ class Sale_Off extends Model
     // Hàm giải quyết khoảng thời gian sale
     public static function SolveStatusSale(&$sales)
     {
-        $currentTimestamp = time();
+        $currentDateTime = new DateTime(); // Lấy ngày giờ hiện tại
 
         foreach ($sales as $key => $sale) {
-            // $startTimestamp = strtotime($sale->saleOff->Start_Date_SO);
-            // $endTimestamp = strtotime($sale->saleOff->End_Date_SO);
-
             $startDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $sale->saleOff->Start_Date_SO);
             $endDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $sale->saleOff->End_Date_SO);
 
-            if ($currentTimestamp >= $startDateTime && $currentTimestamp <= $endDateTime) {
+            if ($currentDateTime >= $startDateTime && $currentDateTime <= $endDateTime) {
                 // Ngày hiện tại nằm trong khoảng thời gian sale
-                $sale['Apply'] = 1;
-            } elseif ($currentTimestamp > $endDateTime) {
+                $sales[$key]['Apply'] = 1;
+            } elseif ($currentDateTime > $endDateTime) {
                 // Ngày khuyến mãi đã từng được áp dụng
-                $sale['Apply'] = 2;
+                $sales[$key]['Apply'] = 2;
             } else {
                 // Ngày khuyến mãi sẽ được áp dụng trong tương lai
-                $sale['Apply'] = 3;
+                $sales[$key]['Apply'] = 3;
             }
         }
     }
