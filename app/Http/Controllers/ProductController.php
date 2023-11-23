@@ -626,19 +626,14 @@ class ProductController extends Controller
     public function inventory()
     {
         $this->authRepository->CheckLogin();
-        $amountImport = import_history_detail::sum('Amount_IDH');
-        $amountExport = ShoppingCart::with(['cart_detail'])
-        ->get()
-        ->sum(function ($shoppingCart) {
-            return $shoppingCart->cart_detail->sum('Amount_CD');
-        });
-
-        $amount = $amountImport - $amountExport;
-        $amount = $amount > 0 ? $amount : 0;
+        // Lấy danh sách sản phẩm với Amount_Product > 0
+        $products = Product::where('Amount_Product','>',0)->get();
+        // Tính tổng Amount_Product cho tất cả các sản phẩm đó
+        $totalAmount = $products->sum('Amount_Product');
         return json_encode([
             'status' => 200,
-            // 'products' => $products,
-            'totalAmount' => $amount
+            'products' => $products,
+            'totalAmount' => $totalAmount
         ]);
     }
 }
