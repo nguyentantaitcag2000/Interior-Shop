@@ -60,6 +60,8 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/InsertProduct', [ProductController::class, 'store']);
     Route::post('/ImportHistory', [ImportHistoryController::class, 'store']);
     Route::post('/comment', [CommentController::class, 'store']);
+    Route::post('/edit-comment', [CommentController::class, 'update']);
+    Route::post('/delete-comment', [CommentController::class, 'destroy']);
     Route::post('/checklogin', [AuthController::class, 'checklogin']);
     Route::post('/getImagesSpecial', [ProductController::class, 'getImagesSpecial']);
     Route::post('/createSaleOff', [SaleOffController::class, 'store']);

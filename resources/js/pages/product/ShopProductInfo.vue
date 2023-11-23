@@ -27,6 +27,7 @@ import Skeleton from 'primevue/skeleton';
 import Badge from 'primevue/badge';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import Dialog from 'primevue/dialog';
 const route = useRoute();
 const router = useRouter();
 const myProduct = ref<product>();
@@ -38,6 +39,9 @@ const tonKho = ref(-1);
 const isLogin = ref(false);
 const sales = reactive<SaleOff[]>([]);
 const loadingSales = ref(false);
+const visibleEditComment = ref(false);
+const commentWantEdit = ref<comment>();
+const visibleButtonDeleteAndEditReply = ref(false);
 interface MyImage {
     itemImageSrc: string;
     thumbnailImageSrc: string;
@@ -133,6 +137,45 @@ const currentListRating = computed(()=>{
 });
 let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
 const checkingAmount = ref(false);
+function DeleteComment(cmt: comment)
+{
+    LazyCodet.AlertProcessing({
+        workerFunction() {
+            return axios.post('/api/delete-comment',{idComment: cmt.id}).then(res=>{
+                if(res.data.status == 200)
+                {
+                    LazyCodet.AlertSuccess(res.data.message);
+                    let index:any = -1;
+                    let indexCmt:any = -1;
+                    if(cmt.reply_to)
+                    {
+                        indexCmt =  myComment.value?.findIndex(c => c.id == cmt.reply_to);
+                        index = myComment.value![indexCmt!].replies.findIndex(c => c.id == cmt.id);
+                    }
+                    else
+                        index = myComment.value?.findIndex(c => c.id == cmt.id);
+
+                    if(index !== -1)
+                    {
+                        if(cmt.reply_to)
+                        {
+                            myComment.value![indexCmt].replies.splice(index!,1);
+                        }
+                        else
+                        {
+                            myComment.value!.splice(index!,1);
+                        }
+                        
+                    }
+                }
+                else{
+                    LazyCodet.AlertError(res.data.message);
+                }
+            })
+        },
+    })
+}
+
 function CheckAmount()
 {
     if((isNotHaveColor() || form.ID_Color) && (isNotHaveSize() || form.ID_Dimensions) && (isNotHaveMaterial() || form.ID_Material)) {
@@ -190,6 +233,31 @@ const checkChooseSize = ()=>{
         LazyCodet.AlertError("Vui lòng chọn kích thước của sản phẩm !");
         throw '';
     }
+}
+function EditComment()
+{
+    visibleEditComment.value = false;
+    LazyCodet.AlertProcessing({
+        requireConfirm: false,
+        workerFunction() {
+            return axios.post("/api/edit-comment", {
+                id: commentWantEdit.value!.id,
+                content: commentWantEdit.value?.app_replyContent
+
+            }
+                ).then(res=>{
+                    if(res.data.status == 200)
+                    {
+                        LazyCodet.AlertSuccess(res.data.message);
+                        commentWantEdit.value!.content = commentWantEdit.value!.app_replyContent;
+                    }
+                    else
+                    {
+                        LazyCodet.AlertError(res.data.message);
+                    }
+                })
+        },
+    })
 }
 const loadComment = () => {
     axios.get('/api/comment/' + myProduct.value?.ID_Product).then(res=>{
@@ -562,9 +630,9 @@ onMounted(()=>{
                                     </button>
                                     <div class="dropdown-menu">
                                     
-                                    <button onclick="OpenPopupUpdateComment('<?=$value['comment']?>','<?=$value['ID_C']?>',this)" class="dropdown-item" data-bs-target="#updateModal" type="button" data-bs-toggle="modal">Edit</button>
-                                    <button class="btn_delete_comment dropdown-item" data-id-comment="<?=$value['ID_C']?>">Delete</button>
-                 
+                                        <button @click="visibleEditComment = true; commentWantEdit = cmt; commentWantEdit.app_replyContent = cmt.content" class="dropdown-item" data-bs-target="#updateModal" type="button" data-bs-toggle="modal">Edit</button>
+                                        <button @click="DeleteComment(cmt)" class="dropdown-item" >Delete</button>
+                    
                                     </div>
                                 </div>
                                 <!--// --Ellipsis -->
@@ -594,15 +662,15 @@ onMounted(()=>{
                                             <small>{{' ' + new Date(rep.created_at).toLocaleString()  }}</small>
                                             <!-- --Ellipsis -->
                                             <div  class="d-flex justify-content-end">
-                                                <button type="button" class="btn-ellipsis btn bg-white p-0 dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                <i class="btn-ellipsis fas fa-ellipsis-h d-flex flex-row-reverse"></i>
-                                                </button>
-                                                <div class="dropdown-menu">
-                                                
-                                                <!-- <button onclick="OpenPopupUpdateComment_Reply('<?=$value['comment_ca']?>','<?=$value['ID_CA']?>','<?=$_POST['ID_C']?>',this)" class="dropdown-item" data-bs-target="#updateModal_Reply" type="button" data-bs-toggle="modal"><?=$data['lang']['edit']?></button>
-                                                <button class="btn_delete_reply dropdown-item" data-id-comment="<?=$value['ID_CA']?>"><?=$data['lang']['delete']?></button> -->
-                                                <!-- <button class="dropdown-item" type="button">Báo cáo</button> -->
+                                                <div v-if="visibleButtonDeleteAndEditReply">
+                                                    <button @click="visibleEditComment = true; commentWantEdit = rep; commentWantEdit.app_replyContent = rep.content" class="dropdown-item" data-bs-target="#updateModal" type="button" data-bs-toggle="modal">Edit</button>
+                                                    <button @click="DeleteComment(rep)" class="dropdown-item" >Delete</button>
+                    
                                                 </div>
+                                                <button @click="visibleButtonDeleteAndEditReply = !visibleButtonDeleteAndEditReply" type="button" class="btn-ellipsis btn bg-white p-0 dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <i class="btn-ellipsis fas fa-ellipsis-h d-flex flex-row-reverse"></i>
+                                                </button>
+                                                
                                             </div>
                                             <!--// --Ellipsis -->
 
@@ -675,4 +743,12 @@ onMounted(()=>{
             </div>
         </div>
     </div>
+    
+    <Dialog v-model:visible="visibleEditComment" header="Sửa bình luận">
+
+            <div class="form-group">
+                <textarea v-model="commentWantEdit!.app_replyContent" class="form-control" rows="3" cols="70"></textarea>
+            </div>
+            <button @click="EditComment()" class="btn btn-primary">Lưu thay đổi</button>
+    </Dialog>
 </template>

@@ -103,80 +103,7 @@ onMounted(()=>{
                             </div>
                             <div class="col-sm-2 d-flex ">
                                 <button type="button" @click="visible = true; selectedCartRating = car_detail" class="btn btn-success ml-3">⭐ Đánh giá</button>
-                                <Dialog v-model:visible="visible" header="Đánh giá sản phẩm" :style="{ width: '50rem' }"
-                                :pt="{
-                                    mask: {
-                                        style: 'backdrop-filter: blur(2px)'
-                                    }
-                                }"
-                                :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-                                    <div v-if="ratingFinished">
-                                        <h2><b>Cảm ơn bạn đã cho chung tôi biết cảm xúc của bạn về sản phẩm ^^</b></h2>
-                                       
-                                        <div class="d-flex align-items-center">
-                                            <img src="/shy-hmmm.gif"/>
-                                            <div>
-                                                <span class="h3">Bạn có muốn xem tiếp các sản phẩm khác không ?</span><br><br>
-                                                <button class="btn btn-primary">
-                                                    <router-link to="/">Oki</router-link>
-                                                </button>
-                                                <button @click="visible = false" class="btn btn-dark border ml-3">Không</button>
-                                            </div>
-                                        </div>
-                                        
-                                    </div>
-                                    <div v-else>
-                                        <h2><b>Bạn cảm thấy sản phẩm đã mua như thế nào ?</b></h2>
-                                        <hr>
-                                        <div class="row">
-                                            <div class="col-sm-2">
-                                                <router-link :to="'/product/' + selectedCartRating!.product.ID_Product">
-                                                    <img style="width: 100px;height: 100px;" :src="selectedCartRating!.product.Avatar" alt="" >    
-                                                </router-link>
-                                                
-                                            </div>
-                                            <div class="col-sm-4 d-flex align-items-center ">
-                                                <h5>{{ selectedCartRating!.product.Name_Product }}</h5>
-                                            </div>
-                                        </div>
-                                        <hr>
-                                        <h3 class="text-center">Hãy cho chúng tôi biết mức độ hài lòng của bạn nhé !</h3>
-                                        <Rating v-model="rating" class="d-flex justify-content-center p-3" :cancel="false">
-                                            <template #cancelicon>
-                                                <img src="/cancel.png" height="24" width="24" />
-                                            </template>
-                                            <template #onicon>
-                                                <img src="/custom-onicon.png" height="24" width="24" />
-                                            </template>
-                                            <template #officon>
-                                                <img src="/custom-officon.png" height="24" width="24" />
-                                            </template>
-                                        </Rating>
-                                        <div class="d-flex justify-content-center mt-4">
-                                            <div>
-                                                <span class="p-float-label">
-                                                    <Textarea v-model="contentRating" rows="5" cols="30" />
-                                                    <label>Nội dung đánh giá</label>
-                                                </span>
-                                            </div>
-                                            
-                                            <div class="ml-2">
-                                                <span>Gợi ý:</span><br>
-                                                <button @click="contentRating='Sản phẩm rất tốt'; rating = 5" class="btn btn-dark border ml-1">Sản phẩm rất tốt</button>
-                                                <button @click="contentRating='Không hài lòng lắm'; rating = 3" class="btn btn-dark ml-1">Không hài lòng</button>
-                                                <button @click="contentRating='Tệ'; rating = 1" class="btn btn-dark ml-1">Tệ</button>
-                                            </div>
-                                        
-                                        </div>
-                                        
-                                        <div class="d-flex justify-content-center mt-4">
-                                            <Button type="button" label="Đánh giá" :loading="isRatingProgress" @click="DanhGia()" />
-
-                                        </div>
-                                    </div>
-                                    
-                                    
-                                </Dialog>
+                                
                             </div>
                         
                         
@@ -228,8 +155,82 @@ onMounted(()=>{
                     </li>
                 </ul>
             </div>
+            <Dialog v-model:visible="visible" header="Đánh giá sản phẩm" :style="{ width: '50rem' }"
+                :pt="{
+                    mask: {
+                        style: 'backdrop-filter: blur(2px)'
+                    }
+                }"
+                :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+                    <div v-if="ratingFinished">
+                        <h2><b>Cảm ơn bạn đã cho chung tôi biết cảm xúc của bạn về sản phẩm ^^</b></h2>
+                        
+                        <div class="d-flex align-items-center">
+                            <img src="/shy-hmmm.gif"/>
+                            <div>
+                                <span class="h3">Bạn có muốn xem tiếp các sản phẩm khác không ?</span><br><br>
+                                <button class="btn btn-primary">
+                                    <router-link to="/">Oki</router-link>
+                                </button>
+                                <button @click="visible = false" class="btn btn-dark border ml-3">Không</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div v-else>
+                        <h2><b>Bạn cảm thấy sản phẩm đã mua như thế nào ?</b></h2>
+                        <hr>
+                        <div class="row">
+                            <div class="col-sm-2">
+                                <router-link :to="'/product/' + selectedCartRating!.product.ID_Product">
+                                    <img style="width: 100px;height: 100px;" :src="selectedCartRating!.product.Avatar" alt="" >    
+                                </router-link>
+                                
+                            </div>
+                            <div class="col-sm-4 d-flex align-items-center ">
+                                <h5>{{ selectedCartRating!.product.Name_Product }}</h5>
+                            </div>
+                        </div>
+                        <hr>
+                        <h3 class="text-center">Hãy cho chúng tôi biết mức độ hài lòng của bạn nhé !</h3>
+                        <Rating v-model="rating" class="d-flex justify-content-center p-3" :cancel="false">
+                            <template #cancelicon>
+                                <img src="/cancel.png" height="24" width="24" />
+                            </template>
+                            <template #onicon>
+                                <img src="/custom-onicon.png" height="24" width="24" />
+                            </template>
+                            <template #officon>
+                                <img src="/custom-officon.png" height="24" width="24" />
+                            </template>
+                        </Rating>
+                        <div class="d-flex justify-content-center mt-4">
+                            <div>
+                                <span class="p-float-label">
+                                    <Textarea v-model="contentRating" rows="5" cols="30" />
+                                    <label>Nội dung đánh giá</label>
+                                </span>
+                            </div>
+                            
+                            <div class="ml-2">
+                                <span>Gợi ý:</span><br>
+                                <button @click="contentRating='Sản phẩm rất tốt'; rating = 5" class="btn btn-dark border ml-1">Sản phẩm rất tốt</button>
+                                <button @click="contentRating='Không hài lòng lắm'; rating = 3" class="btn btn-dark ml-1">Không hài lòng</button>
+                                <button @click="contentRating='Tệ'; rating = 1" class="btn btn-dark ml-1">Tệ</button>
+                            </div>
+                        
+                        </div>
+                        
+                        <div class="d-flex justify-content-center mt-4">
+                            <Button type="button" label="Đánh giá" :loading="isRatingProgress" @click="DanhGia()" />
 
+                        </div>
+                    </div>
+                    
+                    
+                </Dialog>
         
   
     </div>
+    
 </template>
