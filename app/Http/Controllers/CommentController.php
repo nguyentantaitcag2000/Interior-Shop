@@ -74,16 +74,43 @@ class CommentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, comment $comment)
+    public function update(Request $request)
     {
-        //
+        $cmt = comment::where('id', $request->input('id'))->first();
+        $cmt->content = $request->input('content');
+        if($cmt->save())
+        {
+            return json_encode([
+                'status' => 200,
+                'message' => 'Update comment is successful',
+            ]);
+        }
+        else
+        {
+            return json_encode([
+                'status' => 400,
+                'message' => 'Update comment is failed',
+            ]);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(comment $comment)
+    public function destroy(Request $request)
     {
-        //
+        if(comment::where('id', $request->input('idComment'))->delete()){
+            return json_encode([
+                'status' => 200,
+                'message' => 'Delete comment is successful',
+            ]);
+        }
+        else
+        {
+            return json_encode([
+                'status' => 400,
+                'message' => 'Delete comment is failed',
+            ]);
+        }
     }
 }
