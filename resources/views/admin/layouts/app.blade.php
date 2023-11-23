@@ -1,3 +1,10 @@
+<?php 
+if(session('level') == 'user')
+{
+    echo "<script>alert('Bạn không có quyền truy cập vào trang này'); history.back(); </script>";
+    return;
+}
+?>
 <!DOCTYPE html>
 
 <html lang="en">

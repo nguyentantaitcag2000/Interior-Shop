@@ -24,25 +24,41 @@ import { useRouter } from 'vue-router';
     });
     const SubmitForm = (event:Event) => {
         event.preventDefault();
-        LazyCodet.AlertProcessing({
-            requireConfirm: false,
-            workerFunction:function(){
-                return axios.post('/api/signup',form).then(res=>{
-                if(res.data.status == 200)
-                {
-                    LazyCodet.AlertSuccess(res.data.message);
-                    setTimeout(function(){
-                        router.push('/auth/signin');
-                    },2000);
-                    
-                }
-                else
-                {
-                    LazyCodet.AlertError(res.data.message);
+        if( ! LazyCheck.ValidEmail(form.email))
+        {
+            LazyCodet.AlertError("Email không hợp lệ");
+        }
+        else if( ! LazyCheck.PasswordSecure(form.password))
+        {
+            LazyCodet.AlertError("Mật khẩu không hợp lệ");
+        }
+        else if( form.password != form.password2)
+        {
+            LazyCodet.AlertError("Mậu khẩu không khớp nhau");
+        }
+        else
+        {
+            LazyCodet.AlertProcessing({
+                requireConfirm: false,
+                workerFunction:function(){
+                    return axios.post('/api/signup',form).then(res=>{
+                    if(res.data.status == 200)
+                    {
+                        LazyCodet.AlertSuccess(res.data.message);
+                        setTimeout(function(){
+                            router.push('/auth/signin');
+                        },2000);
+                        
+                    }
+                    else
+                    {
+                        LazyCodet.AlertError(res.data.message);
+                    }
+                });
                 }
             });
-            }
-        })
+        }
+        
         
     }
     onMounted(()=>{
