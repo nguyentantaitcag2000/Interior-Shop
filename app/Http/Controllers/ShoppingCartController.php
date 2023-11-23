@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CartDetail;
+use App\Models\import_history_detail;
 use App\Models\Product;
 use App\Models\ShoppingCart;
 use App\Models\User;
@@ -102,12 +103,32 @@ class ShoppingCartController extends Controller
         foreach ($datas as $key => $cart) {
             $cartDetail_arr = $cart['cart_detail'];
             foreach ($cartDetail_arr as $cartD) {
-                if($cartD['Amount_CD'] <= 0)
+                $amoutUserBuy = $cartD['Amount_CD'];
+                if($amoutUserBuy <= 0)
                 {
                     return json_encode([
                         'status' => 401,
                         'message' => 'Số lượng phải lớn hơn 0'
                     ]);     
+                }
+                //Kiểm tra xem là ở số lượng sản phẩm ở database có đủ cho người dùng mua không
+                $ID_Color = $cartD['ID_Color'];
+                $ID_Material = $cartD['ID_Material'];
+                $ID_Product = $cartD['ID_Product'];
+                $ID_D = $cartD['ID_D'];
+                $amount = import_history_detail::getAmount($ID_Color, $ID_Material, $ID_D, $ID_Product);
+                if($amount < $amoutUserBuy)
+                {
+                    if($amount == 0)
+                        return json_encode([
+                            'status' => 401,
+                            'message' => "Sản phẩm này hiện tại đã hết hàng, vui lòng theo dõi và đợi có hàng lại nhé"
+                        ]);
+                    else
+                        return json_encode([
+                            'status' => 401,
+                            'message' => "Có 1 sản phẩm mà bạn mua với số lượng là $amoutUserBuy nhưng mà cửa hàng chỉ còn lại $amount"
+                        ]);     
                 }
                 CartDetail::where('ID_SC',$cartD['ID_SC'])->where('ID_Product',$cartD['ID_Product'])
                 ->update(['Amount_CD' => $cartD['Amount_CD']]);
