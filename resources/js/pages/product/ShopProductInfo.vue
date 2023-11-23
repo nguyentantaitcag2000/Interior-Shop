@@ -47,6 +47,7 @@ interface MyImage {
     thumbnailImageSrc: string;
     alt: string;
 }
+const id_user = (document.getElementById('id_user_login') as HTMLInputElement).value;
 
 const images = ref<MyImage[]>([]);
 const ratings = ref<Review_Rating_Response>();
@@ -624,7 +625,7 @@ onMounted(()=>{
                                 <h6 class="mt-0" style="display:contents;"><strong class="ms-2">{{ cmt.user.Email.split('@')[0] }}</strong>  </h6>
                                 <small>{{' ' + new Date(cmt.created_at).toLocaleString()  }}</small>
                                 <!-- --Ellipsis -->
-                                <div class="d-flex justify-content-end" >
+                                <div v-if="id_user == cmt.user.ID_User.toString()" class="d-flex justify-content-end" >
                                     <button type="button"  class="btn-ellipsis btn bg-white p-0 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <i class="btn-ellipsis fas fa-ellipsis-h d-flex flex-row-reverse"></i>
                                     </button>
@@ -661,7 +662,7 @@ onMounted(()=>{
                                             <h6 class="mt-0" style="display:contents;"><strong class="ms-2">{{ rep.user.Email.split('@')[0] }}</strong>  </h6>
                                             <small>{{' ' + new Date(rep.created_at).toLocaleString()  }}</small>
                                             <!-- --Ellipsis -->
-                                            <div  class="d-flex justify-content-end">
+                                            <div v-if="id_user == cmt.user.ID_User.toString()" class="d-flex justify-content-end">
                                                 <div v-if="visibleButtonDeleteAndEditReply">
                                                     <button @click="visibleEditComment = true; commentWantEdit = rep; commentWantEdit.app_replyContent = rep.content" class="dropdown-item" data-bs-target="#updateModal" type="button" data-bs-toggle="modal">Edit</button>
                                                     <button @click="DeleteComment(rep)" class="dropdown-item" >Delete</button>
