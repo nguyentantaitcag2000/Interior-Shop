@@ -55,6 +55,8 @@ use Illuminate\Support\Facades\Session;
                         </div>
                         <?php }?>
                         
+                        
+                        <?php if(session()->has('email')) {?>
                         <div class="position-relative btn hover">
                             <span id='count_product_in_cart' style="width:25px;height:25px;top: -10px;right: -12px;" class="position-absolute d-none bg-danger text-light rounded-circle text-center"
                             >
@@ -63,7 +65,6 @@ use Illuminate\Support\Facades\Session;
                                 <img src="/images/shopping-cart.png" class="me-3" style="width:35px;padding: 0;">  
                             </router-link>
                         </div>
-                        <?php if(session()->has('email')) {?>
                         <div class="btn dropdown">
                             <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-expanded="false">
                             <span class="badge badge-primary mr-2">{{session('level')}}</span><?=session('email');?>
