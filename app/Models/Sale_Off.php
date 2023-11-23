@@ -22,6 +22,7 @@ class Sale_Off extends Model
     public static function SolveStatusSale(&$sales)
     {
         $currentTimestamp = time();
+        
 
         foreach ($sales as $key => $sale) {
             $startTimestamp = strtotime($sale->saleOff->Start_Date_SO);
