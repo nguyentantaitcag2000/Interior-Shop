@@ -17,8 +17,10 @@ use App\Http\Controllers\ShoppingCartController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewRatingController;
 use App\Http\Controllers\SaleOffController;
 use App\Http\Controllers\ShipMethodController;
+use App\Http\Controllers\UserTypeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,6 +51,11 @@ Route::group(['middleware' => ['web']], function () {
     Route::get('/bill/{bill}', [BillController::class, 'show']);
     Route::post('/bill/update/{bill}', [BillController::class, 'update']);
     Route::get('/users', [UserController::class, 'index']);
+    Route::get('/users/{id_user_type}', [UserController::class, 'getUserByUserType']);
+    Route::post('/user', [UserController::class, 'show']);
+    Route::post('/user-type', [UserTypeController::class, 'index']);
+    Route::post('/change-level', [UserTypeController::class, 'changeLevel']);
+    Route::post('/saveProfile', [UserController::class, 'update']);
     Route::get('/products/inventory', [ProductController::class, 'inventory']);
     Route::post('/InsertProduct', [ProductController::class, 'store']);
     Route::post('/ImportHistory', [ImportHistoryController::class, 'store']);
@@ -60,6 +67,10 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/showSales', [SaleOffController::class, 'index']);
     Route::post('/showSale/{id}', [SaleOffController::class, 'show']);
     Route::post('/UpdateDetailSale', [DetailSaleOfProductController::class, 'update']);
+    Route::post('/rating/{id}', [ReviewRatingController::class, 'show']);
+    Route::post('/rating', [ReviewRatingController::class, 'store']);
+    Route::post('/block-user', [UserController::class, 'blockUser']);
+    Route::post('/unblock-user', [UserController::class, 'unBlockUser']);
 
 });
 //POST
@@ -78,6 +89,7 @@ Route::post('/InsertCategory', [CategoryController::class, 'store']);
 
 Route::post('/UpdateCategory/{id}', [CategoryController::class, 'update']);
 Route::post('/UpdateProduct/{id}', [ProductController::class, 'update']);
+
 Route::delete('/delete/category/{id}', [CategoryController::class, 'destroy']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::delete('/sales/{id}', [SaleOffController::class, 'destroy']);

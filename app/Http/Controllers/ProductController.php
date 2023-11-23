@@ -30,7 +30,7 @@ enum FILTER: int {
 }
 class ProductController extends Controller
 {
-    
+
     private $authRepository;
     public function __construct(AuthRepositoryInterface $authRepository) {
         $this->authRepository = $authRepository;
@@ -60,7 +60,7 @@ class ProductController extends Controller
         {
             $query->where('Name_Product','LIKE','%' . $keyword . '%');
         }
-        
+
         $products = $query->orderByDesc('product.ID_Product')
             ->get();
         // Tính số tiền đã được giảm giá nếu có
@@ -72,10 +72,10 @@ class ProductController extends Controller
                     $price -= ($product->Price * $detail_sale->saleOff->Discount_Percent_SO/100);
                 }
             }
-            $products[$key]->Price_SaleOff =  $price ; 
-            
+            $products[$key]->Price_SaleOff =  $price ;
+
         }
-        
+
         return $products;
     }
 
@@ -84,7 +84,7 @@ class ProductController extends Controller
      */
     public function create()
     {
-        
+
     }
 
     /**
@@ -94,10 +94,10 @@ class ProductController extends Controller
     {
         try{
             $this->authRepository->CheckLogin();
-        
+
             return DB::transaction(function(){
                 $Image = new Image();
-                
+
 
                 $ID_Materials = request('ID_Material');
                 $ID_Colors = request('ID_Color');
@@ -110,7 +110,7 @@ class ProductController extends Controller
                     'Avatar' =>  $Image->imagePathAVT_Full,
                     'ID_S' => request('ID_S'),
                 ]);
-                
+
                 $productID = $product->ID_Product;
 
                 //Price History
@@ -147,14 +147,14 @@ class ProductController extends Controller
 
                 $Image->UploadAVT(request('Avatar'));
                 $Image->UploadAndDetailImage_And_Database($DetailImages,$productID);
-             
+
                 return response()->json([
                     'status' => 200,
                     'message' => 'Success',
                     'object' => $this->show( $product->ID_Product)
                 ], 200); // Mã trạng thái HTTP 200 cho response
-            },5); 
-            
+            },5);
+
         }
         catch (\Exception $e) {
             // return response()->json([
@@ -166,20 +166,20 @@ class ProductController extends Controller
                 'status' => $e->getCode() ?: 500,
                 'message' => 'Failed',
                 'object' =>  $e->getMessage()
-            ]); 
+            ]);
         }
-    } 
+    }
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        $product = $this->getRelates(Product::query()) 
+        $product = $this->getRelates(Product::query())
         ->where('ID_Product', $id)
         ->first();
         // Tính số tiền đã được giảm giá nếu có
-  
+
             $price = $product->Price;
             if($product->detailSaleOfProduct)
             {
@@ -187,9 +187,9 @@ class ProductController extends Controller
                     $price -= ($product->Price * $detail_sale->saleOff->Discount_Percent_SO/100);
                 }
             }
-            $product->Price_SaleOff =  $price ; 
-        
-        
+            $product->Price_SaleOff =  $price ;
+
+
         return $product;
     }
 
@@ -204,9 +204,12 @@ class ProductController extends Controller
     {
         $names = $request->input('names'); // Có dạng product32,product33,product44
         $nameArray = explode(',', $names);
+        $currentTimestamp = time();
 
         // Sử dụng Eloquent để truy vấn cơ sở dữ liệu và lấy thông tin Avatar
-        $products = Product::where(function ($query) use ($nameArray) {
+        $products = Product::with(['detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
+            Sale_Off::applySaleCondition($query, $currentTimestamp);
+        }])->where(function ($query) use ($nameArray) {
             foreach ($nameArray as $name) {
                 $query->orWhere('Avatar', 'LIKE', "%{$name}%");
             }
@@ -218,7 +221,7 @@ class ProductController extends Controller
 
     public function filter(int $id)
     {
-        
+
         $query = Product::select()
                 ->with(['category','dimensions','detailProductImage','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
                 ,'detailProductMaterial.material',
@@ -275,17 +278,17 @@ class ProductController extends Controller
                 for ($i = 0; $i < 30; $i++) {
                     $date = now()->subDays($i)->toDateString();
                     $endDate = now()->subDays($i - 1)->toDateString();
-        
+
                     $totalSales = DB::select("
                         SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS TotalSales
                         FROM bill
                         WHERE ID_BS = 2
                         AND CreateDate BETWEEN '$date' AND '$endDate';
                     ")[0]->TotalSales;
-        
+
                     $totalSalesData[] = $totalSales;
                 }
-        
+
                 return $totalSalesData;
             }
             else if($timeCode >=3 && $timeCode <=12)
@@ -293,19 +296,19 @@ class ProductController extends Controller
                 for ($i = 0; $i < $timeCode; $i++) {
                     $date = now()->subMonths($i)->startOfMonth()->toDateString();
                     $endDate = now()->subMonths($i - 1)->startOfMonth()->subDay()->toDateString();
-        
+
                     $totalSales = DB::select("
                         SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS TotalSales
                         FROM bill
                         WHERE ID_BS = 2
                         AND CreateDate BETWEEN '$date' AND '$endDate';
                     ")[0]->TotalSales;
-        
+
                     $totalSalesData[] = $totalSales;
                 }
-        
+
                 return $totalSalesData;
-        
+
             }
             // COALESCE -> Nếu như mà trường hợp khoảng thời gián đó không có bán được đơn hàng nào
             // .. thì nó sẽ mặc định là 0
@@ -316,7 +319,7 @@ class ProductController extends Controller
         }
         else
         {
-            
+
             $totalSalesData = [];
             $soNam = 2;
 
@@ -338,7 +341,7 @@ class ProductController extends Controller
             return $totalSalesData;
 
         }
-        
+
     }
     public function tongNguoiDatHang(Request $request)
     {
@@ -406,9 +409,9 @@ class ProductController extends Controller
     {
         try{
 
-            
+
             return DB::transaction(function() use ($id){
-                
+
                 $Image = new Image();
                 $myProduct = Product::find($id);
                 $oldFolderImage = $myProduct->Avatar;
@@ -416,7 +419,7 @@ class ProductController extends Controller
                 $ID_Materials = request('ID_Material');
                 $ID_Colors = request('ID_Color');
                 $DetailImages = request('DetailImage');
-                
+
                 foreach (Product::find($id)->detailProductImage as $row) {
                     $row->delete();
                 }
@@ -428,7 +431,7 @@ class ProductController extends Controller
                 $myProduct->ID_S = request('ID_S');
 
                 $myProduct->save();
-                
+
                 $productID = $id;
                 //Price History
                 product_price_history::create([
@@ -450,17 +453,17 @@ class ProductController extends Controller
 
                 $Image->UploadAVT(request('Avatar'));
                 $Image->UploadAndDetailImage_And_Database($DetailImages,$productID);
-             
+
                 //Sau khi xong thì xóa đi folder image cũ
                 $this->deleteFolderImage($oldFolderImage);
-                
+
                 return response()->json([
                     'status' => 200,
                     'message' => 'Success',
                     'object' => $this->show($productID)
                 ], 200); // Mã trạng thái HTTP 200 cho response
-            },5); 
-            
+            },5);
+
         }
         catch (\Exception $e) {
             // return response()->json([
@@ -472,7 +475,7 @@ class ProductController extends Controller
                 'status' => $e->getCode() ?: 500,
                 'message' => 'Failed',
                 'object' =>  $e->getMessage()
-            ]); 
+            ]);
         }
     }
 
@@ -485,36 +488,36 @@ class ProductController extends Controller
             return DB::transaction(function() use ($id) {
                 // Lấy sản phẩm dựa trên ID
                 $product = Product::find($id);
-    
+
                 if (!$product) {
                     return response()->json([
                         'status' => 404,
                         'message' => 'Product not found'
                     ], 404);
                 }
-    
+
                 // Lấy đường dẫn hình ảnh chính (Avatar)
                 $avatarPath = str_replace('/storage/', '', $product->Avatar);
-    
+
                 // // Lấy danh sách đường dẫn hình ảnh chi tiết
                 // $detailImages = DetailProductImage::where('ID_Product', $id)->pluck('Image')->toArray();
                 // $detailImagesPaths = array_map(function($path) {
                 //     return str_replace('/storage/', '', $path);
                 // }, $detailImages);
-    
-                
-    
+
+
+
                 // Xóa sản phẩm khỏi cơ sở dữ liệu
                 $product->delete();
-                
-                
+
+
                 $this->deleteFolderImage($product->Avatar);
 
                 return response()->json([
                     'status' => 200,
                     'message' => 'Product and its images deleted successfully'
                 ], 200);
-    
+
             }, 5);
         } catch (\Exception $e) {
             return [
@@ -522,7 +525,7 @@ class ProductController extends Controller
                 'message' => $e->getMessage()
             ];
         }
-    
+
     }
     public function amount(Request $request)
     {
@@ -531,7 +534,7 @@ class ProductController extends Controller
         $ID_D = $request->input('ID_D');
 
         $ID_Product = $request->input('ID_Product');
-        
+
         $amountImport = import_history_detail::where('ID_Color',$ID_Color)
         ->where('ID_Material',$ID_Material)
         ->where('ID_D',$ID_D)
@@ -579,7 +582,7 @@ class ProductController extends Controller
     }
     private function insertSize($array_Dimensions,$productID)
     {
-        
+
         dimensions::where('ID_Product',$productID)->delete();
         $data_insert_to_dimensions = [];
         foreach ($array_Dimensions as $key => $value) {
@@ -617,8 +620,8 @@ class ProductController extends Controller
         DetailProductMaterial::where('ID_Product')->delete();
         DetailProductColor::insert($colorsToInsert);
     }
-    
-   
+
+
     private function deleteFolderImage($pathAvatar)
     {
         // // Xóa hình ảnh chính
@@ -651,7 +654,7 @@ class ProductController extends Controller
 }
 class Image {
     private $timestamp = null;
-    public $imagePathAVT = null; 
+    public $imagePathAVT = null;
     public $imagePathAVT_Full = null;
     public function __construct() {
         $this->timestamp = Carbon::now()->timestamp;
@@ -662,7 +665,7 @@ class Image {
         $this->imagePathAVT_Full = '/storage/' . $this->imagePathAVT;
     }
     public function UploadAVT($base64){
-        
+
         if($this->isBase64($base64))
         {
                 // Chuyển base64 thành dữ liệu hình ảnh thực sự
@@ -675,7 +678,7 @@ class Image {
             $base64 = str_replace('/storage/','',$base64);
             Storage::disk('public')->copy($base64, $this->imagePathAVT);
         }
-        
+
     }
     private function isBase64($string) {
         return preg_match('#^data:image/\w+;base64,#i', $string);
@@ -683,11 +686,11 @@ class Image {
     public function UploadAndDetailImage_And_Database($array_base64, $productID) {
         $baseDirectoryImage = "images/products/product_" . $this->timestamp;
         $imagesToInsert = [];
-    
+
         for ($i = 0; $i < count($array_base64); $i++) {
             $filename = $this->timestamp . '_' . $i . '.jpg';
             $imagePath = $baseDirectoryImage . '/' . $filename;
-            
+
             // Kiểm tra xem chuỗi có phải là base64 hay không
             if ($this->isBase64($array_base64[$i])) {
                 $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $array_base64[$i]));
@@ -697,7 +700,7 @@ class Image {
                 $array_base64[$i] = str_replace('/storage/','',$array_base64[$i]);
                 Storage::disk('public')->copy($array_base64[$i], $imagePath);
             }
-    
+
             $imagePathForDB = '/storage/' . $imagePath;
             $imagesToInsert[] = [
                 'ID_Product' => $productID,
@@ -706,5 +709,5 @@ class Image {
         }
         DetailProductImage::insert($imagesToInsert);
     }
-    
+
 }

@@ -97,8 +97,9 @@ onMounted(()=>{
                         </span>
                     </div>
                 </template>
-                <template #empty> No bills found. </template>
                 <template #loading> Loading bills data. Please wait. </template>
+                <template #empty> No bills found. </template>
+
                 <Column   header="Đơn đặt hàng">
                     <template #body="slotProps">
                         <a :href="'/bill/' + slotProps.data.bill.ID_Bill" target="_blank">#{{ slotProps.data.bill.ID_Bill }}</a>

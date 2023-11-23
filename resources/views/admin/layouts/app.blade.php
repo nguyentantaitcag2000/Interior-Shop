@@ -162,7 +162,7 @@
                         <img src="/avatar.png" class="img-circle elevation-2" alt="User Image">
                     </div>
                     <div class="info">
-                        <a href="#" class="d-block">Admin</a>
+                        <a href="#" class="d-block">{{session('level')}}</a>
                     </div>
                 </div>
 
@@ -220,6 +220,25 @@
                                 </p>
                             </router-link>
                         </li>
+                        <li  class="nav-item">
+                            <router-link to="/admin/users" active-class="active" class="nav-link">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>
+                                    Khách hàng
+                                </p>
+                            </router-link>
+                        </li>
+                        <?php if(session('level') == 'admin') {?>
+                        <li  class="nav-item">
+                            <router-link to="/admin/seller" active-class="active" class="nav-link">
+                                <i class="nav-icon fas fa-user"></i>
+                                <p>
+                                    Người bán
+                                </p>
+                            </router-link>
+                        </li>
+                        <?php }?>
+                        
                         
                         <li class="nav-item">
                             <a href="#" class="nav-link">

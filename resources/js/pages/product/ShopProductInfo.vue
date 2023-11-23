@@ -14,7 +14,7 @@ img {
 import {onMounted, ref,reactive,computed,watch,watchEffect} from 'vue';
 import { useRoute } from 'vue-router';
 import { useRouter } from 'vue-router';
-import { product,comment, SaleOff } from '../../interface';
+import { product,comment, SaleOff, Review_Rating_Response } from '../../interface';
 import axios, { formToJSON } from 'axios';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
@@ -45,6 +45,7 @@ interface MyImage {
 }
 
 const images = ref<MyImage[]>([]);
+const ratings = ref<Review_Rating_Response>();
 const home_breadcrumb = ref({
     icon: 'fas fa-home',
     to: '/',
@@ -115,7 +116,21 @@ const initForm = {
     ID_Material: null,
     ID_Dimensions: null
 }
-
+const currentTabRating = ref(0);
+const currentListRating = computed(()=>{
+    if(currentTabRating.value == 0)
+        return ratings.value?.all;
+    else if(currentTabRating.value == 1)
+        return ratings.value?._1;
+    else if(currentTabRating.value == 2)
+        return ratings.value?._2;
+    else if(currentTabRating.value == 3)
+        return ratings.value?._3;
+    else if(currentTabRating.value == 4)
+        return ratings.value?._4;
+    else if(currentTabRating.value == 5)
+        return ratings.value?._5;
+});
 let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
 const checkingAmount = ref(false);
 function CheckAmount()
@@ -233,6 +248,12 @@ const isNotHaveSize = ()=>{
         return true;
     return false;
 }
+const loadRatings = () =>
+{
+    axios.post(`/api/rating/${route.params.id}` ).then(res=>{
+        ratings.value = res.data.object;
+    });
+}
 const loadProduct = () => {
     form.ID_Product = Number(route.params.id);
 axios.get('/api/product/' + route.params.id).then(res => {
@@ -282,6 +303,7 @@ axios.get('/api/product/' + route.params.id).then(res => {
 onMounted(()=>{
     
     loadProduct();
+    loadRatings();
     loadingSales.value = true;
     axios.post('/api/showSale/' + route.params.id).then(res=>{
         Object.assign(sales, (res.data as any).sales);
@@ -413,12 +435,15 @@ onMounted(()=>{
         </div>
         <div class="row">
             <h1>Thông tin khuyến mãi</h1>
-            <DataTable :value="sales" tableStyle="min-width: 50rem">
+            
+            <DataTable :value="sales" tableStyle="min-width: 50rem" class="w-100 card" :loading="loadingSales" stripedRows >
+                <template v-if="!loadingSales" #empty> Sản phẩm này chưa có khuyến mãi nào. </template>
                 <Column field="sale_off.Name_SO" header="Tên khuyến mãi"></Column>
                 <Column field="sale_off.Discount_Percent_SO" header="Giảm giá (%)"></Column>
                 <Column field="sale_off.Start_Date_SO" header="Ngày bắt đầu"></Column>
                 <Column field="sale_off.End_Date_SO" header="Ngày kết thúc"></Column>
                 <Column header="Tình trạng">
+                
                 <template #body="slotProps">
                     <span v-if="slotProps.data.Apply == 1"><Badge value="Đang áp dụng"></Badge></span>
                     <span v-else-if="slotProps.data.Apply == 2"><Badge severity="danger" value="Đã áp dụng"></Badge></span>
@@ -457,19 +482,57 @@ onMounted(()=>{
 
               
             </div>
-            <div class="card flex justify-content-center">
-                <Rating v-if="isLogin" v-model="rating">
-                    <template #cancelicon>
-                        <img src="https://primefaces.org/cdn/primevue/images/rating/cancel.png" height="24" width="24" />
-                    </template>
-                    <template #onicon>
-                        <img src="https://primefaces.org/cdn/primevue/images/rating/custom-onicon.png" height="24" width="24" />
-                    </template>
-                    <template #officon>
-                        <img src="https://primefaces.org/cdn/primevue/images/rating/custom-officon.png" height="24" width="24" />
-                    </template>
-                </Rating>
+            
+            <div class="d-flex flex-column w-100">
+                <h3><b>Đánh giá sản phẩm</b></h3>
+                <hr>
+                <div class="d-flex w-100">
+                    <div class="d-flex flex-column card" style="width: 100px;">
+                        <button @click="currentTabRating = 0" class="btn btn-light" :class="{active: currentTabRating == 0}">Tất cả</button>
+                        <button @click="currentTabRating = 5" class="btn btn-light" :class="{active: currentTabRating == 5}">5 <img src="/custom-onicon.png" width="20" height="20" /> ({{ ratings?._5.length }})</button>
+                        <button @click="currentTabRating = 4" class="btn btn-light" :class="{active: currentTabRating == 4}">4 <img src="/custom-onicon.png" width="20" height="20" /> ({{ ratings?._4.length }})</button>
+                        <button @click="currentTabRating = 3" class="btn btn-light" :class="{active: currentTabRating == 3}">3 <img src="/custom-onicon.png" width="20" height="20" /> ({{ ratings?._3.length }})</button>
+                        <button @click="currentTabRating = 2" class="btn btn-light" :class="{active: currentTabRating == 2}">2 <img src="/custom-onicon.png" width="20" height="20" /> ({{ ratings?._2.length }})</button>
+                        <button @click="currentTabRating = 1" class="btn btn-light" :class="{active: currentTabRating == 1}">1 <img src="/custom-onicon.png" width="20" height="20" /> ({{ ratings?._1.length }})</button>
+                    </div>
+                    <div class="p-2 card w-100 h-100">
+                        <div v-if="ratings && ratings.total == 0" class="text-center d-flex justify-content-center align-items-center h-100">
+                            <h2>Sản phẩm chưa có đánh giá nào !</h2>
+                        </div>
+                        <div v-else-if="ratings">
+                            <div v-if="currentListRating?.length == 0" class="text-center d-flex justify-content-center align-items-center h-100">
+                                <h2>Không có đánh giá nào ở mức độ hài lòng là {{ currentTabRating }}</h2>
+                            </div>
+                            <div v-for="rat in currentListRating" class="mb-5">
+                            
+                                <div class="media-body">
+                                    <img width="50" height="50" src="/avatar.png" class="mr-3 rounded-circle" alt="...">
+                                    <h6 class="mt-0" style="display:contents;"><strong class="ms-2">{{ rat.user.Email.split('@')[0] }}</strong>  </h6>
+                                    <small>{{' ' + new Date(rat.created_at).toLocaleString()  }}</small>
+                                    <Rating class="m-3" v-model="rat.rate.Value_Rate" :cancel="false">
+                                        <template #cancelicon>
+                                            <img src="/cancel.png" height="24" width="24" />
+                                        </template>
+                                        <template #onicon>
+                                            <img src="/custom-onicon.png" height="24" width="24" />
+                                        </template>
+                                        <template #officon>
+                                            <img src="/custom-officon.png" height="24" width="24" />
+                                        </template>
+                                    </Rating>
+                               
+
+                                </div>
+                                <div class="content-comment p-3">
+                                {{ rat.Content_RR }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
             </div>
+          
         </div>
         <div class="row">
             <div class="card mb-3 w-100">

@@ -8,7 +8,7 @@ import { setCountCard } from '../../main';
 import TabMenu from 'primevue/tabmenu';
 import { cart_tabs } from '../../tabs';
 import Skeleton from 'primevue/skeleton';
-
+import Badge from 'primevue/badge';
 const order = ref<order[]>();
 const router = useRouter();
 const totalMoney = ref(0);
@@ -35,7 +35,11 @@ onMounted(()=>{
         
         <div v-if="order" v-for="ord in order">
             <div style="background-color: rgb(214, 214, 214);" class="p-3 mt-3 d-flex justify-content-between rounded">
-                <router-link :to="'/bill/' + ord.bill.ID_Bill">Đơn hàng #{{ ord.bill.ID_Bill }}</router-link>
+                <div>
+                    <router-link :to="'/bill/' + ord.bill.ID_Bill">Đơn hàng #{{ ord.bill.ID_Bill }}</router-link>
+                    <Badge :value="ord.bill.bill_status.Name_BS" class="ml-3"></Badge>
+                    <Badge v-if="ord.order_detail[0].shopping_cart.cart_detail.length == 0" value="Sản phẩm đã bị xoá" severity="danger" class="ml-3"></Badge>
+                </div>
                 <span>{{ ord.bill.CreateDate }}</span>
             </div>
             <form class="ml-5">
