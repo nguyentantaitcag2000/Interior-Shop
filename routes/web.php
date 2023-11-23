@@ -27,6 +27,7 @@ Route::get('/export', function () {
 Route::get('/image', 'ImageController@getImage');
 Route::get('auth/logout',[ApplicationController::class,'logout']);
 Route::get('/auth/{view}',[ApplicationController::class,'auth'])->where('view','(.*)');
+Route::get('admin',[ApplicationController::class,'admin'])->where('view','(.*)');
 Route::get('admin/{view}',[ApplicationController::class,'admin'])->where('view','(.*)');
 Route::get('/{view}',[ApplicationController::class,'shop'])->where('view','(.*)');
 
