@@ -221,10 +221,12 @@ class ProductController extends Controller
 
     public function filter(int $id)
     {
-        
+        $currentTimestamp = time();
         $query = Product::select()
                 ->with(['category','dimensions','detailProductImage','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
-                ,'detailProductMaterial.material',
+                ,'detailProductMaterial.material','detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
+                    Sale_Off::applySaleCondition($query, $currentTimestamp);
+                },
                 'detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
                 ,'detailProductColor.color']);
         if( FILTER::High2Low->value == $id)
