@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import {onMounted, reactive,ref, watch} from 'vue';
-import { order } from '../../interface';
+import { cartDetail, order } from '../../interface';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import { setCountCard } from '../../main';
 import TabMenu from 'primevue/tabmenu';
@@ -33,13 +33,14 @@ const rating = ref(5);
 const ratingFinished = ref(false);
 const id_user = (document.getElementById('id_user_login') as HTMLInputElement).value;
 const isRatingProgress = ref(false);
-function DanhGia(idProduct: number)
+const selectedCartRating = ref<cartDetail>();
+function DanhGia()
 {
     isRatingProgress.value = true;
     axios.post('/api/rating',{
             content: contentRating.value,
             value: rating.value,
-            idProduct: idProduct,
+            idProduct: selectedCartRating!.value?.ID_Product,
             idUser: id_user,
         }).then(res=>{
         if(res.data.status == 200)
@@ -101,7 +102,7 @@ onMounted(()=>{
                                 x{{ car_detail.Amount_CD }}
                             </div>
                             <div class="col-sm-2 d-flex ">
-                                <button type="button" @click="visible = true" class="btn btn-success ml-3">⭐ Đánh giá</button>
+                                <button type="button" @click="visible = true; selectedCartRating = car_detail" class="btn btn-success ml-3">⭐ Đánh giá</button>
                                 <Dialog v-model:visible="visible" header="Đánh giá sản phẩm" :style="{ width: '50rem' }"
                                 :pt="{
                                     mask: {
@@ -129,13 +130,13 @@ onMounted(()=>{
                                         <hr>
                                         <div class="row">
                                             <div class="col-sm-2">
-                                                <router-link :to="'/product/' + car_detail.product.ID_Product">
-                                                    <img style="width: 100px;height: 100px;" :src="car_detail.product.Avatar" alt="" >    
+                                                <router-link :to="'/product/' + selectedCartRating!.product.ID_Product">
+                                                    <img style="width: 100px;height: 100px;" :src="selectedCartRating!.product.Avatar" alt="" >    
                                                 </router-link>
                                                 
                                             </div>
                                             <div class="col-sm-4 d-flex align-items-center ">
-                                                <h5>{{ car_detail.product.Name_Product }}</h5>
+                                                <h5>{{ selectedCartRating!.product.Name_Product }}</h5>
                                             </div>
                                         </div>
                                         <hr>
@@ -169,7 +170,7 @@ onMounted(()=>{
                                         </div>
                                         
                                         <div class="d-flex justify-content-center mt-4">
-                                            <Button type="button" label="Đánh giá" :loading="isRatingProgress" @click="DanhGia(car_detail.product.ID_Product)" />
+                                            <Button type="button" label="Đánh giá" :loading="isRatingProgress" @click="DanhGia()" />
 
                                         </div>
                                     </div>
