@@ -6,6 +6,7 @@ use App\Models\bill;
 use App\Models\CartDetail;
 use App\Models\order;
 use App\Models\order_detail;
+use App\Models\Product;
 use App\Models\ShoppingCart;
 use App\Repositories\Auth\AuthRepositoryInterface;
 use App\Repositories\ShoppingCart\ShoppingCartRepositoryInterface;
@@ -61,6 +62,7 @@ class OrderController extends Controller
             $id_color = $request->input('idColorBuyNow');
             $id_material = $request->input('idMaterialBuyNow');
             $id_dimensions = request('idDimensionsBuyNow');
+            
 
             $result = $this->shoppingCartRepository->store($id_user,$amount,$id_product,$id_color,$id_material,$id_dimensions);
             if($result['status'] != 200)
@@ -80,9 +82,12 @@ class OrderController extends Controller
             ShoppingCart::where('ID_SC',$ID_SC)->update(['ID_CS' => 3]);
             $CartDetailList = CartDetail::where('ID_SC',$ID_SC)->with('product')->get();
 
+            //Khi export xong thì cập nhật lại số lượng tồn kho của sản phẩm
+            Product::where('ID_Product',$id_product)->decrement('Amount_Product', $amount);
+
         }
         else
-            {
+        {
             foreach ($request->input('ID_SC_List') as $key => $ID_SC) {
                 $array_insert_data_order_detail[] = [
                     'ID_SC' => $ID_SC,
@@ -90,6 +95,8 @@ class OrderController extends Controller
                 ];
                 //Chuyển trạng thái các giỏ hàng thành đã thanh toán
                 ShoppingCart::where('ID_SC',$ID_SC)->update(['ID_CS' => 3]);
+
+                
             }
             $CartDetailList = CartDetail::whereIn('ID_SC',$request->input('ID_SC_List'))->with('product')->get();
         }
@@ -102,6 +109,9 @@ class OrderController extends Controller
         $vat = 8;
         foreach ($CartDetailList as $key => $cartDetail) {
             $totalMoney += $cartDetail->product->Price * $cartDetail->Amount_CD;
+            
+            //Khi export xong thì cập nhật lại số lượng tồn kho của sản phẩm
+            Product::where('ID_Product',$cartDetail->product->ID_Product)->decrement('Amount_Product', $cartDetail->Amount_CD);
         }
         foreach ($CartDetailList as $key => $cardetail) {
             // Tính số tiền đã được giảm giá nếu có
@@ -136,6 +146,7 @@ class OrderController extends Controller
             'ID_BS' => 1, // Đang xử lý
             'ID_Order' => $order->ID_Order,
         ]);
+       
         return json_encode([
             'status' => 200,
             'message' => 'Order successfull'

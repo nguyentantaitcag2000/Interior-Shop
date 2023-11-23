@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\import_history;
 use App\Models\import_history_detail;
+use App\Models\Product;
 use App\Repositories\Auth\AuthRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,6 +58,9 @@ class ImportHistoryController extends Controller
                 'ID_Product' => $ID_Product,
                 'ID_IH' => $id_ih,
             ]);
+
+            //Khi import xong thì cập nhật lại số lượng tồn kho của sản phẩm
+            Product::where('ID_Product',$ID_Product)->increment('Amount_Product', $amountImport);
             return json_encode([
                 'status' => 200,
                 'message' => 'Nhập hàng thành công',

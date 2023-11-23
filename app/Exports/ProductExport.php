@@ -15,15 +15,14 @@ class ProductExport implements FromCollection, WithHeadings, WithStyles
     public function headings(): array
     {
         return [
-            "ID_Bill",
-            "CreateDate",
-            "TotalMoney",
-            "VAT_rate",
-            "VAT_amount",
-            "TotalMoneyCheckout",
-            "ID_BS",
-            "ID_Order"
-            // ... các tiêu đề khác tương ứng với các cột bạn muốn xuất
+            "ID_Product",
+            "ID_Category",
+            "Name_Product",
+            "Description",
+            "Price",
+            "Avatar",
+            "Amount_Product",
+            "ID_S"
         ];
     }
     public function styles(Worksheet $sheet)
