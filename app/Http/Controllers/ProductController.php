@@ -627,8 +627,7 @@ class ProductController extends Controller
     {
         $this->authRepository->CheckLogin();
         $amountImport = import_history_detail::sum('Amount_IDH');
-        $amountExport = ShoppingCart::where('ID_CS', '!=', 1)
-        ->with(['cart_detail'])
+        $amountExport = ShoppingCart::with(['cart_detail'])
         ->get()
         ->sum(function ($shoppingCart) {
             return $shoppingCart->cart_detail->sum('Amount_CD');
