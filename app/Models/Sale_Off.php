@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DateTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,17 +23,18 @@ class Sale_Off extends Model
     public static function SolveStatusSale(&$sales)
     {
         $currentTimestamp = time();
-        // Đặt múi giờ cho hàm strtotime
-        
 
         foreach ($sales as $key => $sale) {
-            $startTimestamp = strtotime($sale->saleOff->Start_Date_SO);
-            $endTimestamp = strtotime($sale->saleOff->End_Date_SO);
+            // $startTimestamp = strtotime($sale->saleOff->Start_Date_SO);
+            // $endTimestamp = strtotime($sale->saleOff->End_Date_SO);
 
-            if ($currentTimestamp >= $startTimestamp && $currentTimestamp <= $endTimestamp) {
+            $startDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $sale->saleOff->Start_Date_SO);
+            $endDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $sale->saleOff->End_Date_SO);
+
+            if ($currentTimestamp >= $startDateTime && $currentTimestamp <= $endDateTime) {
                 // Ngày hiện tại nằm trong khoảng thời gian sale
                 $sale['Apply'] = 1;
-            } elseif ($currentTimestamp > $endTimestamp) {
+            } elseif ($currentTimestamp > $endDateTime) {
                 // Ngày khuyến mãi đã từng được áp dụng
                 $sale['Apply'] = 2;
             } else {
