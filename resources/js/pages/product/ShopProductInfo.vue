@@ -745,7 +745,13 @@ onMounted(()=>{
         </div>
     </div>
     
-    <Dialog v-model:visible="visibleEditComment" header="Sửa bình luận">
+    <Dialog v-model:visible="visibleEditComment" header="Sửa bình luận"
+                :pt="{
+                    mask: {
+                        style: 'backdrop-filter: blur(2px)'
+                    }
+                }"
+    >
 
             <div class="form-group">
                 <textarea v-model="commentWantEdit!.app_replyContent" class="form-control" rows="3" cols="70"></textarea>
