@@ -167,7 +167,12 @@ onMounted(()=>{
                 <Column header="Email" field="Email" sortable></Column>
                 <Column header="Ngày tạo" field="regtime" sortable></Column>
                 <Column header="Cập độ" field="user_type.Name_UT" sortable></Column>
-                <Column header="Trạng thái" field="user__u_status.Name_UStatus" sortable></Column>
+                <Column header="Trạng thái" field="user__u_status.Name_UStatus" sortable>
+                    <template #body="slotProps">
+                        <Badge v-if="slotProps.data.user__u_status.ID_UStatus == 2" value="Đã bị khoá" :severity="'danger'"></Badge>
+                        <Badge v-else value="Đang hoạt động" :severity="'success'"></Badge>
+                    </template>
+                </Column>
                 
                 
                 <Column header="Hành động">

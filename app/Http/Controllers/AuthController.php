@@ -34,6 +34,14 @@ class AuthController extends Controller
         // $token = $khach_hang->createToken('access_token')->plainTextToken;
 
         // $request->session()->put('email', $email);
+
+        if($khach_hang->ID_UStatus == 2)
+        {
+            return json_encode([
+                'status' => 401,
+                'message' => 'Tài khoản của bạn đã bị khoá!'
+            ]);
+        }
         session(['email' => $email]);
         session(['id_user' => $khach_hang->ID_User]);
         session(['level' => $khach_hang->user_type->Name_UT]);
