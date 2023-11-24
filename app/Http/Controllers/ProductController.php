@@ -35,6 +35,30 @@ class ProductController extends Controller
     public function __construct(AuthRepositoryInterface $authRepository) {
         $this->authRepository = $authRepository;
     }
+    public function getProductsHot()
+    {
+        $cartDetails = CartDetail::with(['product' => function($query) {
+            $query->with($this->withProduct());
+        }])->get();
+
+        // Sử dụng unique để loại bỏ các sản phẩm trùng lặp
+        $uniqueProducts = $cartDetails->pluck('product')->unique('ID_Product')->values();
+
+        // Sử dụng take để giới hạn số lượng sản phẩm trả về ít nhất là 28
+        $limitedProducts = $uniqueProducts->take(28);
+
+        return $limitedProducts; 
+    }
+    public function withProduct()
+    {
+        $currentTimestamp = time();
+        return ['category','dimensions','detailProductImage','detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
+            Sale_Off::applySaleCondition($query, $currentTimestamp);
+        },'detailSaleOfProduct.saleOff','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
+        ,'detailProductMaterial.material',
+        'detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
+        ,'detailProductColor.color'];
+    }
     /**
      * Display a listing of the resource.
      */
@@ -43,12 +67,7 @@ class ProductController extends Controller
         $currentTimestamp = time();
 
         $query = Product::select()
-            ->with(['category','dimensions','detailProductImage','detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
-                Sale_Off::applySaleCondition($query, $currentTimestamp);
-            },'detailSaleOfProduct.saleOff','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
-            ,'detailProductMaterial.material',
-            'detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
-            ,'detailProductColor.color']);
+            ->with($this->withProduct());
 
         if($by == 'category')
         {

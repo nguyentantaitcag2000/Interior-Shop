@@ -20,6 +20,7 @@ const route = useRoute();
 const router = useRouter();
 const categories = ref<category[]>();
 const products = ref<product[]>();
+const productsHot = ref<product[]>();
 const toast = useToast();
 interface Search{
     by:string,
@@ -144,6 +145,11 @@ const loadProduct = () => {
         isSearching.value = false;
     });
 }
+const loadProductHot = () => {
+    axios.get(`/api/productsHot` ).then(res=>{
+        productsHot.value = res.data;
+    });
+}
 async function chooseUploadImage(event: FileUploadUploaderEvent) {
     const files = event.files as File[]; // Chuyển đổi sang kiểu mảng File
 
@@ -197,6 +203,7 @@ onMounted(()=>{
         categories.value = res.data;
     });
     loadProduct();
+    loadProductHot();
     axios.post('/api/shoppingcart/get_carts_not_checkout').then(res => {
         let array = res.data;
         if(array.length > 0 )
@@ -242,7 +249,7 @@ onMounted(()=>{
         <div v-if="search.by=='_'" class="row mb-3">
             <div class="card">
 
-                <Carousel   :value="products?.slice(0,28)" :numVisible="3" :numScroll="1" :responsiveOptions="responsiveOptions" circular :autoplayInterval="3000">
+                <Carousel   :value="productsHot" :numVisible="3" :numScroll="1" :responsiveOptions="responsiveOptions" circular :autoplayInterval="3000">
                     <template #item="slotProps">
                         <div style="height: 350px;" class="border-1 surface-border border-round m-2 text-center py-5 px-3">
                             <div class="mb-3">

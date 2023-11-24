@@ -97,6 +97,7 @@ Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::delete('/sales/{id}', [SaleOffController::class, 'destroy']);
 //GET
 Route::get('/products/{by}/{keyword}', [ProductController::class, 'index']);
+Route::get('/productsHot', [ProductController::class, 'getProductsHot']);
 
 Route::get('/product/{id}', [ProductController::class, 'show']);
 
