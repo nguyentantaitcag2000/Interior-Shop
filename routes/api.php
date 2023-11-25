@@ -73,6 +73,7 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/rating', [ReviewRatingController::class, 'store']);
     Route::post('/block-user', [UserController::class, 'blockUser']);
     Route::post('/unblock-user', [UserController::class, 'unBlockUser']);
+    Route::post('/UpdateProduct/{id}', [ProductController::class, 'update']);
 
 });
 //POST
@@ -90,7 +91,7 @@ Route::post('/signup', [UserController::class, 'store']);
 Route::post('/InsertCategory', [CategoryController::class, 'store']);
 
 Route::post('/UpdateCategory/{id}', [CategoryController::class, 'update']);
-Route::post('/UpdateProduct/{id}', [ProductController::class, 'update']);
+
 
 Route::delete('/delete/category/{id}', [CategoryController::class, 'destroy']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);

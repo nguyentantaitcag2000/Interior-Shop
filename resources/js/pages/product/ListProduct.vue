@@ -12,15 +12,17 @@ import InputMask from 'primevue/inputmask';
 import $ from 'jquery';
 import { LazyCodet, LazyConvert } from '../../lazycodet/lazycodet';
 import {material,color,category,detailProductColor,detailProductMaterial,detailProductImage,
-    importHistoryDetail,detailSaleOfProduct,
+    importHistoryDetail,detailSaleOfProduct, product_price_history as product_price_history_interface,
 product,
 SaleOff} from '../../interface';
+import Dialog from 'primevue/dialog';
 import { LoadSales } from '../../main';
 import Badge from 'primevue/badge';
 const tonKho_import = ref('Không xác định');
 const sales = reactive<SaleOff[]>([]);
 const loadingSales = ref(false);
 const selectedSales = ref();
+const visiblePriceHistory = ref(false);
 interface FormState{
     'ID_Product': number ,
     'ID_Category': number ,
@@ -40,8 +42,10 @@ interface FormState{
     'detail_product_color': detailProductColor[] ,
     'detail_product_image': detailProductImage[] ,
     'detail_sale_of_product': detailSaleOfProduct[],
+    'product_price_history': product_price_history_interface[],
     import_history_detail: importHistoryDetail
 }
+const productChoosedPriceHistory = ref<FormState>();
 
 const selectedDimensionsImport = ref<number>();
 const selectedMaterialImport = ref<number>();
@@ -86,6 +90,7 @@ const initialFormState:FormState = {
     'detail_product_color': [],
     'detail_product_image': [],
     'detail_sale_of_product': [],
+    'product_price_history': [],
     'import_history_detail': {
         Amount:1,
         ID_IH:-1,
@@ -571,6 +576,9 @@ img {
                 <button class="btn btn-danger p-1 m-1" @click="deleteProduct(slotProps.data.ID_Product)">
                     Delete
                 </button>
+                <button class="btn btn-info p-1 m-1" @click="productChoosedPriceHistory = slotProps.data; visiblePriceHistory = true">
+                    Price History
+                </button>
             </template>
         </Column>
 
@@ -732,6 +740,22 @@ img {
             </div>
         </div>
     </div>
+    <Dialog v-model:visible="visiblePriceHistory" modal :header="'Lịch sử giá của sản phẩm #' + productChoosedPriceHistory?.ID_Product" 
+        :pt="{
+            mask: {
+                style: 'backdrop-filter: blur(2px)'
+            }
+        }"
+        :style="{ width: '50rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+        <DataTable :value="productChoosedPriceHistory?.product_price_history" 
+            sortField="date_effect" :sortOrder="-1"
+            tableStyle="min-width: 50rem">
+            <Column field="price" header="Giá"></Column>
+            <Column field="date_effect" header="Thời gian thay đổi"></Column>
+            <Column field="user.Name_User" header="Người thay đổi"></Column>
+            <Column field="user.ID_User" header="Mã người thay đổi"></Column>
+        </DataTable>
+    </Dialog>
     <!-- FORM MODEL SALEOFF -->
     <div class="modal fade" id="form_modal_saleoff" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">

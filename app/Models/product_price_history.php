@@ -12,5 +12,10 @@ class product_price_history extends Model
     protected $fillable = [
         'price',
         'ID_Product',
+        'ID_User',
     ];
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'ID_User');
+    }
 }
