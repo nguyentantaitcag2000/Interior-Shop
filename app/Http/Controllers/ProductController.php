@@ -303,9 +303,9 @@ class ProductController extends Controller
             $totalSalesData = [];
             if($timeCode == 1)
             {
-                for ($i = 0; $i < 30; $i++) {
-                    $date = now()->subDays($i)->toDateString();
-                    $endDate = now()->subDays($i - 1)->toDateString();
+                for ($i = 1; $i <= 30; $i++) {
+                    $date = now()->subDays($i - 1)->startOfDay();
+                    $endDate = now()->subDays($i - 1)->endOfDay();
         
                     $totalSales = DB::select("
                         SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS TotalSales
@@ -314,16 +314,16 @@ class ProductController extends Controller
                         AND CreateDate BETWEEN '$date' AND '$endDate';
                     ")[0]->TotalSales;
         
-                    $totalSalesData[] = $totalSales;
+                    $totalSalesData[$i] = $totalSales;
                 }
         
                 return $totalSalesData;
             }
             else if($timeCode >=3 && $timeCode <=12)
             {
-                for ($i = 0; $i < $timeCode; $i++) {
-                    $date = now()->subMonths($i)->startOfMonth()->toDateString();
-                    $endDate = now()->subMonths($i - 1)->startOfMonth()->subDay()->toDateString();
+                for ($i = 1; $i <= $timeCode; $i++) {
+                    $date = now()->subMonths($i - 1)->startOfMonth()->toDateString();
+                    $endDate = now()->subMonths($i - 1)->endOfMonth()->subDay()->toDateString();
         
                     $totalSales = DB::select("
                         SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS TotalSales
@@ -332,7 +332,7 @@ class ProductController extends Controller
                         AND CreateDate BETWEEN '$date' AND '$endDate';
                     ")[0]->TotalSales;
         
-                    $totalSalesData[] = $totalSales;
+                    $totalSalesData[$i] = $totalSales;
                 }
         
                 return $totalSalesData;
@@ -352,9 +352,9 @@ class ProductController extends Controller
             $soNam = 2;
 
             // Lặp qua từng năm và lấy tổng doanh số
-            for ($i = 0; $i <= $soNam; $i++) {
-                $startDate = now()->subYears($i)->startOfYear()->toDateString();
-                $endDate = now()->subYears($i)->endOfYear()->toDateString();
+            for ($i = 1; $i <= $soNam; $i++) {
+                $startDate = now()->subYears($i - 1)->startOfYear()->toDateString();
+                $endDate = now()->subYears($i - 1)->endOfYear()->toDateString();
 
                 $totalSales = DB::select("
                     SELECT COALESCE(SUM(TotalMoneyCheckout), 0) AS TotalSales
@@ -363,7 +363,7 @@ class ProductController extends Controller
                     AND CreateDate BETWEEN '$startDate' AND '$endDate';
                 ")[0]->TotalSales;
 
-                $totalSalesData[] = $totalSales;
+                $totalSalesData[$i] = $totalSales;
             }
 
             return $totalSalesData;
