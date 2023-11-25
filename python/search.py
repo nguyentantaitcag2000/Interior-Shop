@@ -42,6 +42,9 @@ class Search:
         # Lưu hình ảnh tải lên thành tệp img_user_uploaded.jpg
         urlImg = 'img_user_uploaded.jpg'
         img = Image.open(BytesIO(image_file.read()))
+
+        # Chuyển đổi chế độ sang 'RGB' trước khi lưu
+        img = img.convert('RGB')
         img.save(os.path.join(os.getcwd(), urlImg))
 
         # load image and extract features
