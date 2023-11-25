@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\bill;
+use App\Models\Bill_Status_History;
 use App\Repositories\Auth\AuthRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -63,12 +64,29 @@ class BillController extends Controller
     public function update(Request $request, bill $bill)
     {
         $this->authRepository->CheckLogin();
-        $bill->ID_BS = $request->input('ID_BS');
+        $id_bs = $request->input('ID_BS');
+        $bill->ID_BS = $id_bs;
         $bill->save();
+
+        
+        if(session()->has('id_user') == false)
+        {
+            return json_encode([
+                'status' => 400,
+                'message' => 'Session has expired',
+            ]);
+        }
+        // Lưu lại lịch sử thay đổi
+        $bsh = new Bill_Status_History();
+        $bsh->ID_User = session('id_user');
+        $bsh->ID_BS = $id_bs;
+        $bsh->ID_BILL = $bill->ID_Bill;
+        $bsh->save();
+        $myBill = bill::where('ID_Bill', $bill->ID_Bill)->with(['bill_status','billStatusHistory','billStatusHistory.user','billStatusHistory.bill_status'])->first();
         return json_encode([
             'status' => 200,
             'message' => 'Success',
-            'object' => $bill->load('bill_status')
+            'object' => $myBill
         ]);
     }
 
