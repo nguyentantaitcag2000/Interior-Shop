@@ -22,10 +22,10 @@ class Search:
         if max_num_images < len(self.images):
             self.images = [self.images[i] for i in sorted(random.sample(range(len(self.images)), max_num_images))]
 
-        
+
         self.model = keras.applications.VGG16(weights='imagenet', include_top=True)
         self.feat_extractor = Model(inputs=self.model.input, outputs=self.model.get_layer("fc2").output)
-        
+
         # Mở file 'data.pkl' để đọc dữ liệu
         with open(self.dataPLK, 'rb') as file:
             loaded_data = pickle.load(file)
@@ -50,7 +50,7 @@ class Search:
         new_pca_features = self.pca.transform(new_features)[0]
         distances = [ distance.cosine(new_pca_features, feat) for feat in self.pca_features ]
         idx_closest, folder_names_closest = self.get_closest_images(urlImg, 10)
-        
+
         return {"folders": folder_names_closest}
     def load_image(self,path):
         img = image.load_img(path, target_size=self.model.input_shape[1:3])
@@ -85,7 +85,7 @@ class Search:
         closest_folder_names = set([self.features_dict[self.images[i]]['folder_name'] for i in idx_closest])
 
         return idx_closest, list(closest_folder_names)
-    
+
     def get_concatenated_images(self,indexes, thumb_height):
         thumbs = []
         for idx in indexes:

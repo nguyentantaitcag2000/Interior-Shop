@@ -51,6 +51,10 @@ class Product extends Model
     {
         return $this->belongsTo(Supplier::class,"ID_S");
     }
+    public function product_price_history()
+    {
+        return $this->hasMany(product_price_history::class, "ID_Product");
+    }
 
     
 }

@@ -7,6 +7,14 @@ export interface color{
     ID_Color:number,
     Name_Color: string,
 }
+export interface product_price_history{
+    id: number,
+    price: number,
+    ID_Product: number,
+    date_effect: string,
+    user: users
+
+}
 export interface category{
     ID_Category: number,
     Name_Category: string,

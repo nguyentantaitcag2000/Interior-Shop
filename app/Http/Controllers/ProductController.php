@@ -47,7 +47,7 @@ class ProductController extends Controller
         // Sử dụng take để giới hạn số lượng sản phẩm trả về ít nhất là 28
         $limitedProducts = $uniqueProducts->take(28);
 
-        return $limitedProducts; 
+        return $limitedProducts;
     }
     public function withProduct()
     {
@@ -55,7 +55,7 @@ class ProductController extends Controller
         return ['category','dimensions','detailProductImage','detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
             Sale_Off::applySaleCondition($query, $currentTimestamp);
         },'detailSaleOfProduct.saleOff','detailProductMaterial' => function($query){ $query->distinct()->groupBy(['ID_Material','ID_Product']);}
-        ,'detailProductMaterial.material',
+        ,'detailProductMaterial.material', 'product_price_history', 'product_price_history.user',
         'detailProductColor' => function($query){ $query->distinct()->groupBy(['ID_Color', 'ID_Product']); }
         ,'detailProductColor.color'];
     }
@@ -131,10 +131,17 @@ class ProductController extends Controller
                 ]);
 
                 $productID = $product->ID_Product;
-
+                if(session()->has('id_user') == false)
+                {
+                    return json_encode([
+                        'status' => 400,
+                        'message' => 'Session has expired',
+                    ]);
+                }
                 //Price History
                 product_price_history::create([
                     'ID_Product' => $productID,
+                    'ID_User' => session('id_user'),
                     'price' => request('Price')
                 ]);
                 //DIMENSIONS
@@ -444,6 +451,24 @@ class ProductController extends Controller
                 foreach (Product::find($id)->detailProductImage as $row) {
                     $row->delete();
                 }
+                $productID = $id;
+                //Price History [Thứ tự quan trọng]
+                if(session()->has('id_user') == false)
+                {
+                    return json_encode([
+                        'status' => 400,
+                        'message' => 'Session has expired',
+                    ]);
+                }
+                if($myProduct->Price != request('Price'))
+                {
+                    product_price_history::create([
+                        'ID_Product' => $productID,
+                        'ID_User' => session('id_user'),
+                        'price' => request('Price')
+                    ]);
+                }
+                // Upadate product [Thứ tự quan trọng]
                 $myProduct->ID_Category = request('ID_Category');
                 $myProduct->Name_Product = request('Name_Product');
                 $myProduct->Description = request('Description');
@@ -453,12 +478,9 @@ class ProductController extends Controller
 
                 $myProduct->save();
 
-                $productID = $id;
-                //Price History
-                product_price_history::create([
-                    'ID_Product' => $productID,
-                    'price' => request('Price')
-                ]);
+
+
+
                 $this->insertSize(request('Dimensions'),$productID);
                 // MATERIAL
                 // MATERIAL
@@ -576,6 +598,8 @@ class ProductController extends Controller
             ->with('detailProductImage')
             ->with('category')
             ->with('dimensions')
+            ->with('product_price_history')
+            ->with('product_price_history.user')
             ->with(['detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
                 Sale_Off::applySaleCondition($query, $currentTimestamp);
             }])

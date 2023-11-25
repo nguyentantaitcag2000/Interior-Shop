@@ -28,6 +28,7 @@ import Badge from 'primevue/badge';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
+import ProgressSpinner from 'primevue/progressspinner';
 const route = useRoute();
 const router = useRouter();
 const myProduct = ref<product>();
@@ -55,6 +56,9 @@ const home_breadcrumb = ref({
     icon: 'fas fa-home',
     to: '/',
 });
+const isSearching = ref(false);
+const productsSimilar = ref<product[]>();
+const pathImageChoosedToSearch = ref<string>();
 interface breadcrumb{
     label:string,
     to:string,
@@ -368,6 +372,48 @@ axios.get('/api/product/' + route.params.id).then(res => {
             CheckAmount();
         }
     });
+}
+async function SearchSimilar(avatar: string)
+{
+    try {
+        pathImageChoosedToSearch.value! = avatar;
+        const blob = await fetch(avatar).then((r) => r.blob());
+        const reader = new FileReader();
+
+        reader.readAsDataURL(blob);
+
+        reader.onloadend = function () {
+            const base64data = reader.result as string;
+
+            // Chuyển đổi base64data thành ArrayBuffer
+            const byteCharacters = atob(base64data.split(',')[1]);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const arrayBuffer = byteArray.buffer;
+
+            // Tạo đối tượng File từ ArrayBuffer
+            const file = new File([arrayBuffer], "avatar.jpg", { type: "image/jpeg" });
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            isSearching.value = true;
+            
+            axios.post(`http://localhost:8001/image`, formData).then(res => {
+                console.log(res.data.folders);
+
+                axios.post('/api/getImagesSpecial', { names: res.data.folders.toString() }).then(res => {
+                    productsSimilar.value = res.data;
+                    isSearching.value = false;
+                });
+            });
+        };
+    } catch (error) {
+        console.error('Error fetching or reading the image:', error);
+    }
 }
 onMounted(()=>{
     
@@ -740,6 +786,52 @@ onMounted(()=>{
                         </div>
                     </div>
                     
+                </div>
+            </div>
+        </div>
+        <div class="bg-light rounded pt-2 mt-3">
+            <div class="row">
+                <h3 class="h3 w3-animate-opacity">Nhấn vào hình ảnh để tìm kiếm hình ảnh tương tự</h3>    
+            </div>
+            <div class="row w-100">
+                <div v-for="detail in myProductRelative?.slice(0,6)" class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
+                    <div class="product-grid2">
+                        <div class="product-image2">
+                           
+                            <img @click="SearchSimilar(detail.Avatar)" class="pic-1 border border-warning" :src="detail.Avatar">
+                            <img v-if="pathImageChoosedToSearch == detail.Avatar" class="position-absolute" style="top:0; right: 0;" src="/tick.png"/>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <div v-if="pathImageChoosedToSearch" class="bg-light rounded pt-2 mt-3">
+            <div class="row">
+                <h5 class="w3-animate-opacity"><b>Kết quả ảnh tương tự đã chọn:</b></h5>    
+            </div>
+            <div class="row w-100">
+                <ProgressSpinner v-if="isSearching" />
+                <div v-else>
+                    <!-- <div><img :src="pathImageChoosedToSearch" width="150" height="150" /> Hình ảnh bạn chọn</div>  -->
+                    <div class="row">
+
+                        <div v-for="detail in productsSimilar" class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
+                            
+                            <div class="product-grid2">
+                                <div class="product-image2">
+                                    <router-link :to="'/product/' + detail.ID_Product">
+                                        <img class="pic-1" :src="detail.Avatar">
+                                    </router-link>
+                                </div>
+                                <div class="product-content">
+                                    <h3 class="title"><router-link :to="'/product/' + detail.ID_Product">{{ detail.Name_Product }}</router-link></h3>
+                                    <span class="price">{{ LazyConvert.ToMoney(detail.Price) }}</span>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
