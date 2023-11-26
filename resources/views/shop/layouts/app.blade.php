@@ -18,16 +18,19 @@ use Illuminate\Support\Facades\Session;
     <link rel="stylesheet" href="{{asset('css/grid-product.css')}}">
 </head>
 <body>
-    <div id="app">
+    <div id="app">  
         <nav class="navbar navbar-expand-sm w3-animate-top bg-light">
             <input id="id_user_login" hidden value="{{session('id_user')}}"/>
             <div class="container-fluid">
-                <router-link class="navbar-brand" to="/">
-                    <img src="/images/icon.png" class="rounded-circle" width="50" height="50">
-                </router-link>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
-                <i class="fa fa-bars" style="font-size:24px;color:black"></i>
-                </button>
+                <div>
+
+                    <router-link class="navbar-brand" to="/">
+                        <img src="/images/icon.png" class="rounded-circle" width="50" height="50">
+                    </router-link>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
+                        <i class="fa fa-bars" style="font-size:24px;color:black"></i>
+                    </button>
+                </div>
                 <div class="collapse navbar-collapse" id="mynavbar">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
@@ -46,6 +49,7 @@ use Illuminate\Support\Facades\Session;
                     </div>
                 
                 </div>
+                <Chatbot></Chatbot>
                 <div class="d-flex justify-content-end">
 
                     <?php if(session()->has('email') == false) {?>
@@ -61,13 +65,14 @@ use Illuminate\Support\Facades\Session;
                             <span id='count_product_in_cart' style="width:25px;height:25px;top: -10px;right: -12px;" class="position-absolute d-none bg-danger text-light rounded-circle text-center"
                             >
                             </span>
+                            
                             <router-link to="/cart">
                                 <img src="/images/shopping-cart.png" class="me-3" style="width:35px;padding: 0;">  
                             </router-link>
                         </div>
-                        <div class="btn dropdown">
-                            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-expanded="false">
-                            <span class="badge badge-primary mr-2">{{session('level')}}</span><?=session('email');?>
+                        <div class="btn dropdown d-flex">
+                            <button id="displayNameUser" class="btn dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-expanded="false">
+                            <span class="badge badge-primary mr-2">{{session('level')}}</span><?=explode('@',session('email'))[0];?>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                 <?php if(session('level') == 'admin' || session('level') == 'seller') {?>

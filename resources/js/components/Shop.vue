@@ -218,7 +218,6 @@ onMounted(()=>{
 
 
 <template>
-    <!-- <Chatbot></Chatbot> -->
    
     <div v-if="search.by!='all'" class="w3-content w3-display-container w3-animate-right-08">
       <img class="mySlides" src="../../../public/images/1.png" style="width:100%">

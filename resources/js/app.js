@@ -8,6 +8,7 @@ import Routes from './routes.js';
 import PrimeVue from 'primevue/config';
 import bsCustomFileInput from 'bs-custom-file-input'
 import ToastService from 'primevue/toastservice';
+import Chatbot from './components/Chatbot.vue';
 
 const app = createApp({});
 const router = createRouter({
@@ -22,5 +23,7 @@ bsCustomFileInput.init();
 app.use(router);
 app.use(PrimeVue);
 app.use(ToastService);
+// Đăng ký component Chatbot
+app.component('Chatbot', Chatbot);
 
 app.mount('#app');
