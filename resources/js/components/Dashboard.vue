@@ -51,7 +51,7 @@ const setChartData = () => {
         ngayOrThangOrNam = "Tháng ";
     
 
-    const labels = Object.keys(chartDataFromAPI.value).map(key => ngayOrThangOrNam + (parseInt(key) + 1));
+    const labels = Object.keys(chartDataFromAPI.value).map(key => ngayOrThangOrNam + (parseInt(key)));
     return {
 
         labels: labels,
