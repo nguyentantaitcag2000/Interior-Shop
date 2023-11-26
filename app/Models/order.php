@@ -33,5 +33,6 @@ class order extends Model
         return $this->belongsTo(method_of_payment::class,'ID_MOP');
 
     }
+    
 
 }

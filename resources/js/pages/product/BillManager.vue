@@ -10,8 +10,11 @@ import { cart_tabs } from '../../tabs';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
+import Dialog from 'primevue/dialog';
 
 const order = ref<order[]>();
+const visibleStatusHistory = ref(false);
+const billChoosedStatusHistory = ref<order>();
 const route = useRoute();
 const totalMoney = ref(0);
 const isLoading = ref(false);
@@ -123,11 +126,27 @@ onMounted(()=>{
                         <a @click="ChangeBillStatus($event,splotProps.data,1)" class="btn btn-light">Chưa thanh toán</a>
                         <a @click="ChangeBillStatus($event,splotProps.data,3)" class="btn btn-primary">Đang vận chuyển</a>
                         <a @click="ChangeBillStatus($event,splotProps.data,4)" class="btn btn-danger">Hủy đơn</a>
+                        <a @click="billChoosedStatusHistory = splotProps.data; visibleStatusHistory = true" class="btn btn-info">Lịch sử thay đổi</a>
                     </template>
                 </Column>
 
                 <template #footer> Tổng cộng {{ order ? order.length : 0 }} đơn đặt hàng. </template>
             </DataTable>
-           
+            <Dialog v-model:visible="visibleStatusHistory" modal :header="'Lịch sử trạng thái đơn đặt hàng #' + billChoosedStatusHistory?.bill.ID_Bill" 
+                :pt="{
+                    mask: {
+                        style: 'backdrop-filter: blur(2px)'
+                    }
+                }"
+                :style="{ width: '50rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+                <DataTable :value="billChoosedStatusHistory?.bill.bill_status_history" 
+                    sortField="date_effect" :sortOrder="-1"
+                    tableStyle="min-width: 50rem">
+                    <Column field="bill_status.Name_BS" header="Trạng thái"></Column>
+                    <Column field="Date_BSH" header="Thời gian thay đổi"></Column>
+                    <Column field="user.Name_User" header="Người thay đổi"></Column>
+                    <Column field="user.ID_User" header="Mã người thay đổi"></Column>
+                </DataTable>
+            </Dialog>
     </div>
 </template>

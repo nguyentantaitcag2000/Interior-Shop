@@ -26,4 +26,8 @@ class bill extends Model
     public function bill_status(){
         return $this->belongsTo(bill_status::class,'ID_BS');
     }
+    public function billStatusHistory()
+    {
+        return $this->hasMany(Bill_Status_History::class, 'ID_BILL','ID_Bill');
+    }
 }

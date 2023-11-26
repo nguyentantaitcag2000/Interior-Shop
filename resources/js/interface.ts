@@ -15,6 +15,13 @@ export interface product_price_history{
     user: users
 
 }
+export interface bill_status_history{
+    Date_BSH: string,
+    ID_BILL: number,
+    ID_BS: number,
+    ID_User: number,
+    bill_status: bill_status
+}
 export interface category{
     ID_Category: number,
     Name_Category: string,
@@ -65,7 +72,8 @@ export interface bill{
     "TotalMoneyCheckout": number,
     "ID_BS": number,
     "ID_Order": number,
-    bill_status: bill_status
+    bill_status: bill_status,
+    bill_status_history: bill_status_history[]
 }
 export interface user_type{
     ID_UT: number,
