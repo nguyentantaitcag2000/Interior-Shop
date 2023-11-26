@@ -1,0 +1,1 @@
+Cửa hàng hiện tại có phương thức thanh toán "Thanh toán khi nhận hàng", sắp tới chúng tôi sẽ có thêm phương thức thanh toán "Thanh toán bằng cách chuyển khoản"

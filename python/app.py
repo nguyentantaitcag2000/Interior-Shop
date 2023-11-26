@@ -1,12 +1,14 @@
 from fastapi import FastAPI, File, UploadFile, Query
 from search import Search
+from chat import Chat
 from fastapi.middleware.cors import CORSMiddleware
 
 import sys,os
 app = FastAPI()
 app_dir = os.path.dirname(os.path.abspath(__file__))
+chat = Chat() #Thứ tự quan trong (không hiểu sao lại bị lỗi nếu sai thứ tự)
+mySearch = Search() #Thứ tự quan trong (không hiểu sao lại bị lỗi nếu sai thứ tự)
 
-mySearch = Search()
 # Thêm CORS Middleware
 app.add_middleware(
     CORSMiddleware,
@@ -20,7 +22,9 @@ print('==================SERVER STARTED==================')
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-
+@app.get("/message")
+async def predict(msg: str = Query(...)):
+    return chat.response(msg)
 @app.post("/image")
 async def predict(file: UploadFile = File(...)):
     return mySearch.search(file.file)

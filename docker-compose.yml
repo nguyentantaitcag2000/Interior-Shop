@@ -1,8 +1,8 @@
 version: '2'
 services:
   webserver:
-    # build: .
-    image: nguyentantaitcag2000/interior-shop:m1
+    build: .
+    # image: nguyentantaitcag2000/interior-shop:m1
     ports:
       - '8000:80'
       - '5173:5173'

@@ -3,3 +3,21 @@
 
 @import 'primevue/resources/primevue.min.css';
 @import 'primevue/resources/themes/saga-blue/theme.css';
+
+@media only screen and (max-width: 830px) {
+	
+    #displayNameUser{
+        display: none;
+    }
+}
+@media only screen and (min-width: 831px) {
+	
+    #displayNameUser{
+        display: block;
+    }
+}
+/*Custom sweetalert*/
+.swal2-container {
+    z-index: 999999999999!important;
+    }
+    

@@ -1,4 +1,4 @@
-<?php 
+<?php
 if(session('level') == 'user')
 {
     echo "<script>alert('Bạn không có quyền truy cập vào trang này'); history.back(); </script>";
@@ -245,8 +245,8 @@ if(session('level') == 'user')
                             </router-link>
                         </li>
                         <?php }?>
-                        
-                        
+
+
                         <li class="nav-item">
                             <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -270,7 +270,7 @@ if(session('level') == 'user')
                                 </li>
                             </ul>
                         </li>
-                        
+
                     </ul>
                 </nav>
 

@@ -218,7 +218,6 @@ onMounted(()=>{
 
 
 <template>
-    <!-- <Chatbot></Chatbot> -->
 
     <div v-if="search.by!='all'" class="w3-content w3-display-container w3-animate-right-08">
       <img class="mySlides" src="../../../public/images/1.png" style="width:100%">
@@ -259,7 +258,7 @@ onMounted(()=>{
                             </div>
                             <div>
                                 <h4 class="mb-1"><router-link :to="'/product/' + slotProps.data.ID_Product">{{  slotProps.data.Name_Product  }}</router-link></h4>
-                                
+
                                 <h6 v-if="slotProps.data.detail_sale_of_product.length>0" class="mt-0 mb-3">
                                     <del>{{ LazyConvert.ToMoney( slotProps.data.Price) }}</del>
                                 </h6>
@@ -318,7 +317,7 @@ onMounted(()=>{
                             </span><br>
                             <span class="price">{{ LazyConvert.ToMoney( pr.Price_SaleOff) }}</span>
                         </div>
-                        
+
                         <span v-else class="price">{{ LazyConvert.ToMoney(pr.Price) }}</span>
                     </div>
                 </div>

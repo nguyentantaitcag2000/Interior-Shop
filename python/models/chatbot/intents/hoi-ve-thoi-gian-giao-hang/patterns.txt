@@ -1,0 +1,4 @@
+Giao hàng của bạn mất bao lâu
+Bao lâu tôi sẽ nhận được đơn hàng
+Hàng của tôi đặt sẽ được giao trong bao lâu
+thời gian giao hạn sẽ mất bao lâu
