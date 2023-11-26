@@ -140,7 +140,7 @@ onMounted(()=>{
                 }"
                 :style="{ width: '50rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
                 <DataTable :value="billChoosedStatusHistory?.bill.bill_status_history" 
-                    sortField="date_effect" :sortOrder="-1"
+                    sortField="Date_BSH" :sortOrder="-1"
                     tableStyle="min-width: 50rem">
                     <Column field="bill_status.Name_BS" header="Trạng thái"></Column>
                     <Column field="Date_BSH" header="Thời gian thay đổi"></Column>
