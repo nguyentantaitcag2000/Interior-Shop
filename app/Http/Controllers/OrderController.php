@@ -179,7 +179,7 @@ class OrderController extends Controller
     public function showAll(Request $request)
     {
       
-        $data = Order::with(['orderDetail.shoppingCart','bill.billStatusHistory','bill.billStatusHistory.user','orderDetail.shoppingCart.cart_detail.product','bill.bill_status'])
+        $data = Order::with(['orderDetail.shoppingCart','bill','bill.billStatusHistory','bill.billStatusHistory.user','bill.billStatusHistory.bill_status','orderDetail.shoppingCart.cart_detail.product','bill.bill_status'])
         ->whereHas('orderDetail.shoppingCart')
         ->whereHas('bill.bill_status', function($query) use ($request) {
             if($request->input('ID_BS') != 0)
