@@ -226,6 +226,24 @@ class ProductController extends Controller
     {
         //
     }
+    public function getProductsByIDs(Request $request)
+    {
+        $ids = $request->input('ids'); // Có dạng 3,5,76,...
+        $idArray = explode(',', $ids);
+        $currentTimestamp = time();
+
+        // Sử dụng Eloquent để truy vấn cơ sở dữ liệu và lấy thông tin Avatar
+        $products = Product::with(['detailSaleOfProduct' => function ($query) use ($currentTimestamp) {
+            Sale_Off::applySaleCondition($query, $currentTimestamp);
+        }])->where(function ($query) use ($idArray) {
+            foreach ($idArray as $id) {
+                $query->orWhere('ID_Product', $id );
+            }
+        })->get();
+
+        // Nếu bạn muốn trả về JSON response, bạn có thể sử dụng hàm response
+        return $products;
+    }
     public function getImagesSpecial(Request $request)
     {
         $names = $request->input('names'); // Có dạng product32,product33,product44

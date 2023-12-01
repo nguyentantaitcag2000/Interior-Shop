@@ -64,6 +64,7 @@ Route::group(['middleware' => ['web']], function () {
     Route::post('/delete-comment', [CommentController::class, 'destroy']);
     Route::post('/checklogin', [AuthController::class, 'checklogin']);
     Route::post('/getImagesSpecial', [ProductController::class, 'getImagesSpecial']);
+    Route::post('/getProductsByIDs', [ProductController::class, 'getProductsByIDs']);
     Route::post('/createSaleOff', [SaleOffController::class, 'store']);
     Route::post('/updateSaleOff/{id}', [SaleOffController::class, 'update']);
     Route::post('/showSales', [SaleOffController::class, 'index']);

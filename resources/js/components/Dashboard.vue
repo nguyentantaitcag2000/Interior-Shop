@@ -376,7 +376,7 @@ onMounted(()=>{
                 <!-- Biểu đồ doanh số -->
                 <Chart class="w-100" type="bar" :data="chartData" :options="chartOptions" />
                 <!-- Biểu đồ số lượng người mua đặt hàng -->
-                <h1>Số lượng người mua đặt hàng</h1>
+                <h1>Số lượng lần đặt mua hàng</h1>
                 <Chart class="w-100" type="line" :data="chartData_SoLuongNguoiDatHang" :options="chartOptions_SoLuongNguoiDatHang" />
             </div>
             <h1>Top các sản phẩm được mua gần đây</h1>

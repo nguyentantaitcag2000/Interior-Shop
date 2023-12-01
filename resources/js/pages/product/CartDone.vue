@@ -46,7 +46,6 @@ function DanhGia()
         if(res.data.status == 200)
         {
             isRatingProgress.value = false;
-            LazyCodet.AlertSuccess(res.data.message);
             ratingFinished.value = true;
         }
         else
