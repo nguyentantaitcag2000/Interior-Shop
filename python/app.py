@@ -1,6 +1,8 @@
 from fastapi import FastAPI, File, UploadFile, Query
 from search import Search
 from chat import Chat
+from recommend import Recommend
+from analyze import Analyze
 from fastapi.middleware.cors import CORSMiddleware
 
 import sys,os
@@ -8,7 +10,8 @@ app = FastAPI()
 app_dir = os.path.dirname(os.path.abspath(__file__))
 chat = Chat() #Thứ tự quan trong (không hiểu sao lại bị lỗi nếu sai thứ tự)
 mySearch = Search() #Thứ tự quan trong (không hiểu sao lại bị lỗi nếu sai thứ tự)
-
+myRecommend = Recommend()
+analyze = Analyze()
 # Thêm CORS Middleware
 app.add_middleware(
     CORSMiddleware,
@@ -31,6 +34,12 @@ async def predict(file: UploadFile = File(...)):
 @app.get("/loadToAddNewImages")
 async def loadToAddNewImages():
     return mySearch.loadToAddNewImages()
+@app.get("/recommend")
+async def recommend(name_product: str = Query(...)):
+    return myRecommend.search(name_product)
+@app.get("/analyze")
+async def analyzer(text: str = Query(...)):
+    return analyze.predict(text)
 
 if __name__ == "__main__":
     import uvicorn
