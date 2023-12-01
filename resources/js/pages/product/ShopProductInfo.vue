@@ -11,7 +11,7 @@ img {
 }
 </style>
 <script setup lang="ts">
-import {onMounted, ref,reactive,computed,watch,watchEffect} from 'vue';
+import {onMounted, ref,reactive,computed,watch,watchEffect, ComputedRef} from 'vue';
 import { useRoute } from 'vue-router';
 import { useRouter } from 'vue-router';
 import { product,comment, SaleOff, Review_Rating_Response } from '../../interface';
@@ -41,6 +41,7 @@ const isLogin = ref(false);
 const sales = reactive<SaleOff[]>([]);
 const loadingSales = ref(false);
 const visibleEditComment = ref(false);
+const visibleAnalyze = ref(false);
 const commentWantEdit = ref<comment>();
 const visibleButtonDeleteAndEditReply = ref(false);
 interface MyImage {
@@ -59,6 +60,8 @@ const home_breadcrumb = ref({
 const isSearching = ref(false);
 const productsSimilar = ref<product[]>();
 const pathImageChoosedToSearch = ref<string>();
+const recommendProducts = ref<product[]>();
+const isLoadingRecommend = ref(false);
 interface breadcrumb{
     label:string,
     to:string,
@@ -70,6 +73,11 @@ interface FormState{
     ID_Material: number|null,
     ID_Dimensions: number|null,
     Amount: number
+}
+interface Analyze{
+    content: string,
+    result?: string,
+    label?: number
 }
 
 const responsiveOptions = ref([
@@ -140,6 +148,8 @@ const currentListRating = computed(()=>{
     else if(currentTabRating.value == 5)
         return ratings.value?._5;
 });
+const ratingAnalyzes = ref<Analyze[]>([]);
+
 let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
 const checkingAmount = ref(false);
 function DeleteComment(cmt: comment)
@@ -325,12 +335,42 @@ const loadRatings = () =>
 {
     axios.post(`/api/rating/${route.params.id}` ).then(res=>{
         ratings.value = res.data.object;
+
+        for (let index = 0; index < ratings.value!.all.length; index++) {
+            const element = ratings.value!.all[index];
+            ratingAnalyzes.value.push({content: element.Content_RR});
+        }
+        Analyze();
     });
+}
+const loadProductRecommend = () => {
+    isLoadingRecommend.value = true;
+    axios.get('http://localhost:8001/recommend?name_product=' + myProduct.value?.Name_Product).then(res=>{
+        console.log('loadProductRecommend', res.data);
+        if(res.data.length>0)
+        {
+            let idsString = '';
+            for (let index = 0; index < res.data.length; index++) {
+                const pro = res.data[index] as product;
+                idsString += pro.ID_Product + ',';
+                
+            }
+            idsString = idsString.slice(0,-1);
+
+            axios.post('/api/getProductsByIDs', { ids: idsString }).then(res => {
+                recommendProducts.value = res.data;
+                isLoadingRecommend.value = false;
+            });
+
+        }
+      
+    })
 }
 const loadProduct = () => {
     form.ID_Product = Number(route.params.id);
 axios.get('/api/product/' + route.params.id).then(res => {
         myProduct.value = res.data;
+        loadProductRecommend();
         let category = myProduct.value?.category.Name_Category == undefined ? '' : myProduct.value?.category.Name_Category;
         items_Breadcrumb.splice(0,items_Breadcrumb.length);
         items_Breadcrumb.push({
@@ -413,6 +453,19 @@ async function SearchSimilar(avatar: string)
         };
     } catch (error) {
         console.error('Error fetching or reading the image:', error);
+    }
+}
+function Analyze()
+{
+    if(currentListRating.value)
+    {
+        for (let index = 0; index < ratingAnalyzes.value.length; index++) {
+            const element = ratingAnalyzes.value[index];
+            axios.get('http://localhost:8001/analyze?text=' + element.content).then(res=>{
+                element.result = res.data.result;
+                element.label  = res.data.label;
+            });
+        }
     }
 }
 onMounted(()=>{
@@ -599,7 +652,11 @@ onMounted(()=>{
             </div>
             
             <div class="d-flex flex-column w-100">
-                <h3><b>Đánh giá sản phẩm</b></h3>
+                
+                <div class="d-flex justify-content-between m-2">
+                    <h3><b>Đánh giá sản phẩm</b></h3>
+                    <button @click="visibleAnalyze = true;" class="btn btn-success">Phân tích cảm xúc</button>
+                </div>
                 <hr>
                 <div class="d-flex w-100">
                     <div class="d-flex flex-column card" style="width: 100px;">
@@ -753,26 +810,12 @@ onMounted(()=>{
                 </div>
                 </div>
             </div>
+        <!-- Các sản phẩm có cùng danh mục -->
         <div class="bg-light rounded pt-2 mt-3">
             <div class="row">
-                <h3 class="h3 w3-animate-opacity">Các sản phẩm có liên quan</h3>    
+                <h3 class="h3 w3-animate-opacity">Các sản phẩm có cùng danh mục</h3>    
             </div>
             <div class="row w-100">
-                <!-- <div v-for="pr in products" class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
-                    <div class="product-grid2">
-                        <div class="product-image2">
-                            <router-link :to="'/product/' + pr.ID_Product" >
-                                <img class="pic-1" :src="pr.Avatar">
-                            </router-link>
-
-                        </div>
-                        <div class="product-content">
-                            <h3 class="title"><a href="#">{{ pr.Name_Product }}</a></h3>
-                            <span class="price">{{ LazyConvert.ToMoney(pr.Price) }}</span>
-                        </div>
-                    </div>
-                </div> -->
-
                 <div v-for="detail in myProductRelative" class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
                     <div class="product-grid2">
                         <div class="product-image2">
@@ -789,6 +832,30 @@ onMounted(()=>{
                 </div>
             </div>
         </div>
+        <!-- Các sản phẩm được gợi ý -->
+        <div class="bg-light rounded pt-2 mt-3">
+            <div class="row">
+                <h3 class="h3 w3-animate-opacity">Các sản phẩm được gợi ý</h3>    
+            </div>
+            <ProgressSpinner v-if="isLoadingRecommend" />
+            <div v-else class="row w-100">
+                <div v-for="detail in recommendProducts" class="col-md-2 col-sm-6 bg-light pt-3 border-end border-2 rounded rounded-3 w3-animate-bottom-08 mt-3 mb-4">
+                    <div class="product-grid2">
+                        <div class="product-image2">
+                            <router-link :to="'/product/' + detail.ID_Product">
+                                <img class="pic-1" :src="detail.Avatar">
+                            </router-link>
+                        </div>
+                        <div class="product-content">
+                            <h3 class="title"><router-link :to="'/product/' + detail.ID_Product">{{ detail.Name_Product }}</router-link></h3>
+                            <span class="price">{{ LazyConvert.ToMoney(detail.Price) }}</span>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <!-- tìm kiếm hình ảnh tương tự -->
         <div class="bg-light rounded pt-2 mt-3">
             <div class="row">
                 <h3 class="h3 w3-animate-opacity">Nhấn vào hình ảnh để tìm kiếm hình ảnh tương tự</h3>    
@@ -849,5 +916,27 @@ onMounted(()=>{
                 <textarea v-model="commentWantEdit!.app_replyContent" class="form-control" rows="3" cols="70"></textarea>
             </div>
             <button @click="EditComment()" class="btn btn-primary">Lưu thay đổi</button>
+    </Dialog>
+    <Dialog v-model:visible="visibleAnalyze" header="Phân tích cảm xúc"
+                :pt="{
+                    mask: {
+                        style: 'backdrop-filter: blur(2px)'
+                    }
+                }"
+    >
+        
+        <DataTable :value="ratingAnalyzes" tableStyle="min-width: 50rem">
+            <Column field="content" header="Nội dung"></Column>
+            <Column header="Cảm xúc">
+                    <template #body="slotProps">
+                        <ProgressSpinner v-if=" ! slotProps.data.result" style="width: 50px; height: 50px" />
+                        <div v-else>
+                            <Badge v-if="slotProps.data.label == 0" :value="slotProps.data.result" :severity="'danger'"></Badge>
+                            <Badge v-else-if="slotProps.data.label == 1" :value="slotProps.data.result" :severity="'success'"></Badge>
+                        </div>
+                    </template>
+            </Column>
+ 
+        </DataTable>
     </Dialog>
 </template>

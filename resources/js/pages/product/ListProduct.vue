@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import axios from 'axios';
 import {ref, reactive, onMounted,computed, ComputedGetter,watch  } from 'vue';
+import * as XLSX from 'xlsx';
+import Papa from 'papaparse';
+import { saveAs } from 'file-saver';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -184,7 +187,29 @@ const currentForm = computed<FormState>({
     },
     set(){}
     
-} ) 
+} );
+const exportToCSV = () => {
+  // Tạo một danh sách các dòng dữ liệu từ DataTable
+  const dataRows = products.value!.map((product, index) => [
+    index, // Thêm cột index
+    product.ID_Product,
+    product.Name_Product,
+    product.category.Name_Category
+    // Thêm các trường dữ liệu khác tùy theo yêu cầu
+  ]);
+
+  // Tạo một đối tượng worksheet
+  const ws = XLSX.utils.aoa_to_sheet([['index', 'id_product', 'name_product', 'category', /* Các tiêu đề khác */], ...dataRows]);
+
+  // Chuyển đổi worksheet thành CSV sử dụng papaparse
+  const csvData = Papa.unparse(XLSX.utils.sheet_to_json(ws));
+
+  // Thêm định dạng Unicode (UTF-8 BOM) vào đầu file
+  const blob = new Blob(['\uFEFF' + csvData], { type: 'text/csv;charset=utf-8' });
+
+  // Tạo và tải xuống file CSV sử dụng file-saver
+  saveAs(blob, 'DanhSachSanPham.csv');
+};
 // const currentForm = computed<FormState>(() => (mode.value == 'insert' ? form : form_update) as FormState);
 
 // Khai báo fillters cho chức năng tìm kiếm ở datatable
@@ -503,87 +528,89 @@ img {
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" >
     <!-- <button type="button" data-bs-toggle="modal" data-bs-target="#insertModal" data-bs-whatever="@mdo" class="btn btn-success m-3">New product</button> -->
     <button @click="openInsertModal" type="button" class="btn btn-success m-3">New product</button>
-    <DataTable v-model:filters="filters" :value="products" dataKey="ID_Product" tableStyle="min-width: 50rem" showGridlines stripedRows
-                paginator :rows="5" :rowsPerPageOptions="[5, 10, 20, 50]"
-                :globalFilterFields="['Name_Product']" filterDisplay="row" :loading="loading" 
-                >
-        <template #header>
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <span class="text-xl text-900 font-bold">Danh sách các sản phẩm:</span>
-                <!-- <Button icon="fas fa-sync" rounded raised /> -->
-            </div>
-            <div class="d-flex justify-content-end">
-                <span class="p-input-icon-left">
-                    <i class="fas fa-holly-berry" />
-                    <InputText v-model="filters['global'].value" placeholder="Keyword Search" />
-                </span>
-            </div>
-        </template>
-        <template #empty> No products found. </template>
-        <template #loading> Loading products data. Please wait. </template>
-        <Column field="ID_Product" sortable  header="Code"></Column>
-        <Column header="Ảnh sản phẩm">
-            <template #body="slotProps">
-                <div class="row">
-                    <div class="col">
-                        <img width="100" height="100" :src="`${slotProps.data.Avatar.replace('/public','')}`" :alt="slotProps.data.Avatar" class="w-6rem shadow-2 border-round" />
-                    </div>
-                    <div class="col">
-                        <div class="row"  v-for="(detail_img, index) in slotProps.data.detail_product_image">
-                            <img v-if="index < 3" :src="detail_img.Image" class="img-fluid img-thumbnail" alt="Sheep" width="60">
-                        </div>
+    <button @click="exportToCSV" class="btn btn-primary m-3">Xuất Excel</button>
+
+<DataTable v-model:filters="filters" :value="products" dataKey="ID_Product" tableStyle="min-width: 50rem" showGridlines stripedRows
+            paginator :rows="5" :rowsPerPageOptions="[5, 10, 20, 50]"
+            :globalFilterFields="['Name_Product']" filterDisplay="row" :loading="loading" 
+            >
+    <template #header>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span class="text-xl text-900 font-bold">Danh sách các sản phẩm:</span>
+            <!-- <Button icon="fas fa-sync" rounded raised /> -->
+        </div>
+        <div class="d-flex justify-content-end">
+            <span class="p-input-icon-left">
+                <i class="fas fa-holly-berry" />
+                <InputText v-model="filters['global'].value" placeholder="Keyword Search" />
+            </span>
+        </div>
+    </template>
+    <template #empty> No products found. </template>
+    <template #loading> Loading products data. Please wait. </template>
+    <Column field="ID_Product" sortable  header="Code"></Column>
+    <Column header="Ảnh sản phẩm">
+        <template #body="slotProps">
+            <div class="row">
+                <div class="col">
+                    <img width="100" height="100" :src="`${slotProps.data.Avatar.replace('/public','')}`" :alt="slotProps.data.Avatar" class="w-6rem shadow-2 border-round" />
+                </div>
+                <div class="col">
+                    <div class="row"  v-for="(detail_img, index) in slotProps.data.detail_product_image">
+                        <img v-if="index < 3" :src="detail_img.Image" class="img-fluid img-thumbnail" alt="Sheep" width="60">
                     </div>
                 </div>
-                
-            </template>
-        </Column>
-        
-        <Column field="Name_Product" header="Tên sản phẩm"></Column>
-        <Column header="Màu sắc">
-            <template #body="slotProps">
-                <span>{{ getColors_String(slotProps.data.detail_product_color) }}</span>
-            </template>
-        </Column>
-        <Column header="Chất liệu">
-            <template #body="slotProps">
-                <span>{{ getMaterials_String(slotProps.data.detail_product_material) }}</span>
-            </template>
-        </Column>
-        
-        
-        <Column header="Mô tả">
-            <template #body="splotProps">
-                {{ splotProps.data.Description.substring(0,65) }}
-            </template>
-        </Column>
-        <Column header="Giá" sortable sortField="Price">
-            <template #body="splotProps">
-                {{ LazyConvert.ToMoney(splotProps.data.Price) }}
-            </template>
-        </Column>
-        <Column field="category.Name_Category" header="Danh mục" sortable></Column>
-        <Column header="Hành động">
-            <template #body="slotProps">
-                <button data-toggle="modal" class="btn btn-warning p-1 m-1" @click="updateProduct(slotProps.data)">
-                    Update
-                </button>
-                <button data-toggle="modal" class="btn btn-primary p-1 m-1" @click="importProduct(slotProps.data)">
-                    Import
-                </button>
-                <button data-toggle="modal" class="btn btn-success p-1 m-1" @click="saleOffProduct(slotProps.data)">
-                    Sale-off
-                </button>
-                <button class="btn btn-danger p-1 m-1" @click="deleteProduct(slotProps.data.ID_Product)">
-                    Delete
-                </button>
-                <button class="btn btn-info p-1 m-1" @click="productChoosedPriceHistory = slotProps.data; visiblePriceHistory = true">
-                    Price History
-                </button>
-            </template>
-        </Column>
+            </div>
+            
+        </template>
+    </Column>
+    
+    <Column field="Name_Product" header="Tên sản phẩm"></Column>
+    <Column header="Màu sắc">
+        <template #body="slotProps">
+            <span>{{ getColors_String(slotProps.data.detail_product_color) }}</span>
+        </template>
+    </Column>
+    <Column header="Chất liệu">
+        <template #body="slotProps">
+            <span>{{ getMaterials_String(slotProps.data.detail_product_material) }}</span>
+        </template>
+    </Column>
+    
+    
+    <Column header="Mô tả">
+        <template #body="splotProps">
+            {{ splotProps.data.Description.substring(0,65) }}
+        </template>
+    </Column>
+    <Column header="Giá" sortable sortField="Price">
+        <template #body="splotProps">
+            {{ LazyConvert.ToMoney(splotProps.data.Price) }}
+        </template>
+    </Column>
+    <Column field="category.Name_Category" header="Danh mục" sortable></Column>
+    <Column header="Hành động">
+        <template #body="slotProps">
+            <button data-toggle="modal" class="btn btn-warning p-1 m-1" @click="updateProduct(slotProps.data)">
+                Update
+            </button>
+            <button data-toggle="modal" class="btn btn-primary p-1 m-1" @click="importProduct(slotProps.data)">
+                Import
+            </button>
+            <button data-toggle="modal" class="btn btn-success p-1 m-1" @click="saleOffProduct(slotProps.data)">
+                Sale-off
+            </button>
+            <button class="btn btn-danger p-1 m-1" @click="deleteProduct(slotProps.data.ID_Product)">
+                Delete
+            </button>
+            <button class="btn btn-info p-1 m-1" @click="productChoosedPriceHistory = slotProps.data; visiblePriceHistory = true">
+                Price History
+            </button>
+        </template>
+    </Column>
 
-        <template #footer> Tổng cộng {{ products ? products.length : 0 }} sản phẩm. </template>
-    </DataTable>
+    <template #footer> Tổng cộng {{ products ? products.length : 0 }} sản phẩm. </template>
+</DataTable>
     
     <div id="thongbao"></div>
     <!-- FORM MODEL -->

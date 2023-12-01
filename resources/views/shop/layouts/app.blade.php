@@ -13,9 +13,10 @@ use Illuminate\Support\Facades\Session;
     <title>AdminLTE 3 | Starter</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="icon" type="image/png" href="/images/icon.png">
-    
+        
     <link rel="stylesheet" href="{{asset('css/w3.css')}}">
     <link rel="stylesheet" href="{{asset('css/grid-product.css')}}">
+    <script src="/js/jquery.min.js"></script>
 </head>
 <body>
     <div id="app">  
@@ -43,7 +44,7 @@ use Illuminate\Support\Facades\Session;
                     </ul>
                     <div class="d-flex position-relative" id="search_bar">
                         <input id="search" class="form-control me-2" type="text" style="height: 50px;" placeholder="Tìm kiếm thứ gì đó">
-                        <ul id="search-results" class="list-group" style="top:40px"></ul>
+                        <ul id="search-results"  style="    position: absolute;z-index: 999;top:40px"></ul>
 
                         <button id="btn_search" class="btn btn-primary" type="button">Search</button>
                     </div>
@@ -125,12 +126,63 @@ use Illuminate\Support\Facades\Session;
 </html>
 
 <script>
+    let timerId = null;
     function handleKeyUp(event) {
         if (event.keyCode === 13) { // 13 là mã cho phím Enter
             const inputValue = event.target.value;
             window.location.href = '/?search=' + encodeURIComponent(inputValue);
         }
     }
+    $(document).ready(function() {
+
+        
+        $('#search').off('keydown').on('keydown', function(event) {
+            console.log('a');
+            if (event.which === 13 || event.keyCode === 13) {
+                // Phím Enter đã được nhấn
+                const inputValue = event.target.value;
+                window.location.href = '/?search=' + encodeURIComponent(inputValue);
+    
+            } else {
+                // Xóa timer cũ (nếu có)
+                if(timerId)
+                clearTimeout(timerId);
+                var searchQuery = $(this).val();
+                // Đặt timer mới
+                if (searchQuery.length >= 2) { // Chỉ gửi Ajax request nếu từ khóa tìm kiếm có độ dài >= 2 ký tự
+                timerId = setTimeout(function(){search(searchQuery);}, 300); // Sau 300ms nếu người dùng ngưng gõ thì mởi call tới server
+                }
+                else {
+                    $('#search-results').html(''); // Xóa kết quả gợi ý tìm kiếm nếu từ khóa tìm kiếm có độ dài < 2 ký tự
+                }
+            }
+        });
+    });
+    function search(searchQuery)
+    {
+
+        $.ajax({
+            url: 'http://localhost:8001/recommend?name_product=' + searchQuery,
+            type: 'get',
+            data: { query: searchQuery },
+            success: function(response) {
+                var suggestions = response;
+                console.log(suggestions);
+                var listItems = '';
+                for (var i = 0; i < suggestions.length; i++) {
+                    listItems += '<li class="list-group-item hover" onclick="location.href=this.querySelector(\'a\').href;"><a href="/?search='+suggestions[i].Name_Product+'">' + suggestions[i].Name_Product + '</a></li>';
+                }
+                $('#search-results').html(listItems);
+                // Xóa timer
+                clearTimeout(timerId);
+            },
+            error: function(xhr, status, error) {
+                console.log(error); // Hiển thị lỗi nếu có
+            }
+        });
+      
+    }
+    
 </script>
 
 
