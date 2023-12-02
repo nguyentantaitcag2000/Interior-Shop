@@ -170,7 +170,7 @@ use Illuminate\Support\Facades\Session;
                 console.log(suggestions);
                 var listItems = '';
                 for (var i = 0; i < suggestions.length; i++) {
-                    listItems += '<li class="list-group-item hover" onclick="location.href=this.querySelector(\'a\').href;"><a href="/?search='+suggestions[i].Name_Product+'">' + suggestions[i].Name_Product + '</a></li>';
+                    listItems += '<li class="list-group-item hover" onclick="location.href=this.querySelector(\'a\').href;"><a href="/product/'+suggestions[i].ID_Product+'">' + suggestions[i].Name_Product + '</a></li>';
                 }
                 $('#search-results').html(listItems);
                 // Xóa timer
