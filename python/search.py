@@ -36,7 +36,7 @@ class Search:
         features_matrix = np.array([value['feature'] for value in self.features_dict.values()])
 
         # pca = PCA(n_components=300)
-        self.pca = PCA(n_components=134)
+        self.pca = PCA(n_components=22)
         self.pca.fit(features_matrix)
     def search(self,image_file):
         # Lưu hình ảnh tải lên thành tệp img_user_uploaded.jpg

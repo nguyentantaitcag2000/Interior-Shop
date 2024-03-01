@@ -224,7 +224,6 @@ onMounted(()=>{
       <img class="mySlides" src="../../../public/images/2.png" style="width:100%;display:none;">
       <img class="mySlides" data-timeout="8000" src="../../../public/images/3.png" style="width:100%;display:none;">
       <img class="mySlides" data-timeout="8000" src="../../../public/images/4.png" style="width:100%;display:none;">
-      <img class="mySlides" data-timeout="10000" src="../../../public/images/5.png" style="width:100%;display:none;">
       <!-- <button class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button> -->
       <!-- <button class="w3-button w3-black w3-display-right" onclick="plusDivs(1)">&#10095;</button> -->
     </div>
